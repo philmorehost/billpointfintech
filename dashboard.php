@@ -29,7 +29,7 @@ $balance = $stmt->fetchColumn();
             <a href="data.php" class="service-item" style="text-decoration: none; color: inherit;">Data</a>
             <a href="cable.php" class="service-item" style="text-decoration: none; color: inherit;">Cable TV</a>
             <a href="electricity.php" class="service-item" style="text-decoration: none; color: inherit;">Electricity</a>
-            <div class="service-item">Savings</div>
+            <a href="exam.php" class="service-item" style="text-decoration: none; color: inherit;">Exam PINs</a>
             <div class="service-item">Loan</div>
             <div class="service-item">Crypto</div>
             <div class="service-item more-btn" onclick="openModal()">More</div>

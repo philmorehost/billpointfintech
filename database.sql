@@ -75,6 +75,20 @@ INSERT INTO `electricity_discos` (`provider_name`, `provider_code`) VALUES
 ('Enugu Electric', 'eedc'),
 ('Yola Electric', 'yedc');
 
+-- Exam Products Table
+CREATE TABLE `exam_products` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `exam_name` varchar(255) NOT NULL,
+  `product_code` varchar(255) NOT NULL,
+  `price` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `exam_products` (`exam_name`, `product_code`, `price`) VALUES
+('WAEC Result Checker', 'waec', 3800),
+('NECO Result Checker', 'neco', 1400),
+('NABTEB Result Checker', 'nabteb', 950);
+
 -- Transactions Table
 CREATE TABLE `transactions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

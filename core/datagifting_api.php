@@ -18,6 +18,8 @@ class DatagiftingAPI {
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_data));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         $response = curl_exec($ch);
 
         if (curl_errno($ch)) {
@@ -83,6 +85,13 @@ class DatagiftingAPI {
             'meter_number' => $meter_number,
             'type' => $type,
             'amount' => $amount
+        ]);
+    }
+
+    public function purchase_exam_pin($type, $quantity) {
+        return $this->make_request('exam.php', [
+            'type' => $type,
+            'quantity' => $quantity
         ]);
     }
 }

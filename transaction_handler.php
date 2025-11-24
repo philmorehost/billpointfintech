@@ -146,4 +146,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             return $datagifting->purchase_electricity($provider, $meter_number, $meter_type, $amount);
         }, 'electricity.php');
     }
+
+    if ($_POST['action'] === 'buy_exam_pin') {
+        $product_id = (int)$_POST['exam_product'];
+        $quantity = (int)$_POST['quantity'];
+
+        if (empty($product_id) || $quantity < 1) {
+            set_flash_message('error', 'Invalid input.');
+            header('Location: exam.php');
+            exit();
+        }
+
+        $product_stmt = $pdo->prepare("SELECT * FROM exam_products WHERE id = ?");
+        $product_stmt->execute([$product_id]);
+        $product = $product_stmt->fetch();
+
+        if (!$product) {
+            set_flash_message('error', 'Invalid exam product selected.');
+            header('Location: exam.php');
+            exit();
+        }
+
+        $total_amount = $product['price'] * $quantity;
+
+        process_transaction($pdo, $user_id, $total_amount, 'exam', function() use ($datagifting, $product, $quantity) {
+            return $datagifting->purchase_exam_pin($product['product_code'], $quantity);
+        }, 'exam.php');
+    }
 }
