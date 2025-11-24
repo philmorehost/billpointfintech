@@ -1,9 +1,6 @@
 <?php
-session_start();
+require_once 'includes/bootstrap.php';
 require_once 'includes/auth_check.php';
-require_once 'includes/database.php';
-require_once 'includes/flash_messages.php';
-require_once 'includes/csrf.php';
 $csrf_token = generate_csrf_token();
 
 $stmt = $pdo->query("SELECT * FROM data_plans ORDER BY network, price");

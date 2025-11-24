@@ -72,6 +72,26 @@ INSERT INTO `cable_plans` (`cable_provider`, `package_name`, `package_code`, `pr
 ('startimes', 'Basic Weekly', 'basic_weekly', 1237),
 ('startimes', 'Smart Weekly', 'smart_weekly', 1534);
 
+-- Electricity Discos Table
+CREATE TABLE `electricity_discos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_name` varchar(255) NOT NULL,
+  `provider_code` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `electricity_discos` (`provider_name`, `provider_code`) VALUES
+('Eko Electric', 'ekedc'),
+('Ikeja Electric', 'ikedc'),
+('Abuja Electric', 'aedc'),
+('Kano Electric', 'kedco'),
+('Port Harcourt Electric', 'phed'),
+('Jos Electric', 'jedc'),
+('Ibadan Electric', 'ibedc'),
+('Kaduna Electric', 'kaedco'),
+('Enugu Electric', 'eedc'),
+('Yola Electric', 'yedc');
+
 -- Transactions Table
 CREATE TABLE `transactions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

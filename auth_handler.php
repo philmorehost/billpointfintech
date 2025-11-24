@@ -1,13 +1,11 @@
 <?php
-session_start();
-
-require_once 'includes/database.php';
-require_once 'includes/flash_messages.php';
-require_once 'includes/csrf.php';
+require_once 'includes/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if (!validate_csrf_token()) {
-        die('CSRF validation failed.');
+        set_flash_message('error', 'CSRF validation failed.');
+        header('Location: ' . basename($_SERVER['HTTP_REFERER']));
+        exit();
     }
     $action = $_POST['action'];
 
@@ -46,6 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $hashed_pin = password_hash($pin, PASSWORD_DEFAULT);
 
         try {
+            $pdo->beginTransaction();
+
             // Check if email already exists
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
@@ -65,9 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $wallet_stmt->execute([$user_id, $currency]);
             }
 
+            $pdo->commit();
             set_flash_message('success', 'Signup successful. Please login.');
             header('Location: login.php');
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             set_flash_message('error', 'Database error. Please try again.');
             header('Location: signup.php');
         }

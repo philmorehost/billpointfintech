@@ -1,7 +1,6 @@
 <?php
-session_start();
+require_once 'includes/bootstrap.php';
 require_once 'includes/auth_check.php';
-require_once 'includes/database.php';
 
 $user_id = $_SESSION['user_id'];
 $stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? AND currency = 'NGN'");
@@ -29,7 +28,7 @@ $balance = $stmt->fetchColumn();
             <a href="airtime.php" class="service-item" style="text-decoration: none; color: inherit;">Airtime</a>
             <a href="data.php" class="service-item" style="text-decoration: none; color: inherit;">Data</a>
             <a href="cable.php" class="service-item" style="text-decoration: none; color: inherit;">Cable TV</a>
-            <div class="service-item">Transfer</div>
+            <a href="electricity.php" class="service-item" style="text-decoration: none; color: inherit;">Electricity</a>
             <div class="service-item">Savings</div>
             <div class="service-item">Loan</div>
             <div class="service-item">Crypto</div>

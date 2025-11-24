@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <?php
-session_start();
-require_once 'includes/flash_messages.php';
-require_once 'includes/csrf.php';
+require_once 'includes/bootstrap.php';
 $csrf_token = generate_csrf_token();
 ?>
 <head>

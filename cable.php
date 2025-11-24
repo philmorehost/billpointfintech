@@ -1,9 +1,6 @@
 <?php
-session_start();
+require_once 'includes/bootstrap.php';
 require_once 'includes/auth_check.php';
-require_once 'includes/database.php';
-require_once 'includes/flash_messages.php';
-require_once 'includes/csrf.php';
 $csrf_token = generate_csrf_token();
 ?>
 <!DOCTYPE html>
@@ -61,10 +58,11 @@ $csrf_token = generate_csrf_token();
             }
 
             // AJAX call to verify IUC
-            fetch('transaction_handler.php', {
+            const csrf_token = document.querySelector('input[name="csrf_token"]').value;
+            fetch('ajax_handler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `action=verify_iuc&cable_provider=${provider}&iuc_number=${iuc}&csrf_token=<?php echo $csrf_token; ?>`
+                body: `action=verify_iuc&cable_provider=${provider}&iuc_number=${iuc}&csrf_token=${csrf_token}`
             })
             .then(response => response.json())
             .then(data => {
@@ -84,7 +82,7 @@ $csrf_token = generate_csrf_token();
             packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
 
             // AJAX call to get packages
-            fetch(`transaction_handler.php?action=get_cable_plans&provider=${provider}`)
+            fetch(`ajax_handler.php?action=get_cable_plans&provider=${provider}`)
             .then(response => response.json())
             .then(plans => {
                 plans.forEach(plan => {

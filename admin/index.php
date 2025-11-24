@@ -15,14 +15,14 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
     <title>Admin Dashboard</title>
 </head>
 <?php
-require_once '../includes/database.php';
-require_once '../includes/flash_messages.php';
-require_once '../includes/csrf.php';
+require_once '../includes/bootstrap.php';
 $csrf_token = generate_csrf_token();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if (!validate_csrf_token()) {
-        die('CSRF validation failed.');
+        set_flash_message('error', 'CSRF validation failed.');
+        header('Location: index.php');
+        exit();
     }
     if ($_POST['action'] === 'save_api_key') {
         $api_key = $_POST['datagifting_api_key'];
