@@ -3,8 +3,12 @@ session_start();
 
 require_once 'includes/database.php';
 require_once 'includes/flash_messages.php';
+require_once 'includes/csrf.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!validate_csrf_token()) {
+        die('CSRF validation failed.');
+    }
     $action = $_POST['action'];
 
     if ($action === 'signup') {
@@ -16,6 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         if (empty($full_name) || empty($email) || empty($phone) || empty($password) || empty($pin)) {
             set_flash_message('error', 'All fields are required.');
+            header('Location: signup.php');
+            exit();
+        }
+
+        if (!preg_match('/^[0-9]{10,14}$/', $phone)) {
+            set_flash_message('error', 'Invalid phone number format.');
             header('Location: signup.php');
             exit();
         }

@@ -67,6 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
 
+        if (!preg_match('/^[0-9]{10,14}$/', $phone)) {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid phone number format.']);
+            exit();
+        }
+
         try {
             $dsn = "mysql:host={$db['host']};dbname={$db['name']};charset=utf8mb4";
             $pdo = new PDO($dsn, $db['user'], $db['pass']);
@@ -107,6 +112,8 @@ $extensions = [
     'pdo_mysql' => extension_loaded('pdo_mysql'),
 ];
 $extensions_ok = !in_array(false, $extensions);
+
+$is_writable = is_writable(__DIR__) && is_writable(__DIR__ . '/includes');
 
 ?>
 <!DOCTYPE html>
@@ -160,7 +167,14 @@ $extensions_ok = !in_array(false, $extensions);
                     <span class="error">FAIL</span>
                 <?php endif; ?>
             </p>
-            <button class="btn" onclick="nextStep()" <?php if (!$php_version_ok || !$extensions_ok) echo 'disabled'; ?>>Next</button>
+            <p>Writable Directories:
+                <?php if ($is_writable): ?>
+                    <span class="success">OK</span>
+                <?php else: ?>
+                    <span class="error">FAIL</span>
+                <?php endif; ?>
+            </p>
+            <button class="btn" onclick="nextStep()" <?php if (!$php_version_ok || !$extensions_ok || !$is_writable) echo 'disabled'; ?>>Next</button>
         </div>
 
         <!-- Step 2: Database Setup -->

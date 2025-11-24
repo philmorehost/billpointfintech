@@ -3,6 +3,8 @@
 <?php
 session_start();
 require_once 'includes/flash_messages.php';
+require_once 'includes/csrf.php';
+$csrf_token = generate_csrf_token();
 ?>
 <head>
     <meta charset="UTF-8">
@@ -17,6 +19,7 @@ require_once 'includes/flash_messages.php';
             <?php display_flash_message(); ?>
             <form action="auth_handler.php" method="POST">
                 <input type="hidden" name="action" value="signup">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 <div class="form-group">
                     <label for="full_name">Full Name</label>
                     <input type="text" id="full_name" name="full_name" required>
