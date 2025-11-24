@@ -28,7 +28,7 @@ $balance = $stmt->fetchColumn();
         <div class="services-grid">
             <a href="airtime.php" class="service-item" style="text-decoration: none; color: inherit;">Airtime</a>
             <a href="data.php" class="service-item" style="text-decoration: none; color: inherit;">Data</a>
-            <div class="service-item">Bills</div>
+            <a href="cable.php" class="service-item" style="text-decoration: none; color: inherit;">Cable TV</a>
             <div class="service-item">Transfer</div>
             <div class="service-item">Savings</div>
             <div class="service-item">Loan</div>

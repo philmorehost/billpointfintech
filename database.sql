@@ -51,6 +51,27 @@ INSERT INTO `data_plans` (`network`, `type`, `quantity`, `price`) VALUES
 ('mtn', 'sme-data', '3gb', 1770),
 ('mtn', 'sme-data', '5gb', 2950);
 
+-- Cable Plans Table
+CREATE TABLE `cable_plans` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cable_provider` varchar(255) NOT NULL,
+  `package_name` varchar(255) NOT NULL,
+  `package_code` varchar(255) NOT NULL,
+  `price` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `cable_plans` (`cable_provider`, `package_name`, `package_code`, `price`) VALUES
+('dstv', 'Padi', 'padi', 4378),
+('dstv', 'Yanga', 'yanga', 5970),
+('dstv', 'Confam', 'confam', 10945),
+('gotv', 'Smallie', 'smallie', 1890),
+('gotv', 'Jinja', 'jinja', 3880),
+('gotv', 'Jolli', 'jolli', 5771),
+('startimes', 'Nova Weekly', 'nova_weekly', 594),
+('startimes', 'Basic Weekly', 'basic_weekly', 1237),
+('startimes', 'Smart Weekly', 'smart_weekly', 1534);
+
 -- Transactions Table
 CREATE TABLE `transactions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

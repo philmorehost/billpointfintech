@@ -148,4 +148,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
     }
+
+    if ($_POST['action'] === 'buy_cable_plan') {
+        $user_id = $_SESSION['user_id'];
+        $plan_id = (int)$_POST['cable_plan'];
+        $iuc_number = $_POST['iuc_number'];
+
+        if (empty($plan_id) || empty($iuc_number)) {
+            set_flash_message('error', 'Invalid input.');
+            header('Location: cable.php');
+            exit();
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            $plan_stmt = $pdo->prepare("SELECT * FROM cable_plans WHERE id = ?");
+            $plan_stmt->execute([$plan_id]);
+            $plan = $plan_stmt->fetch();
+
+            if (!$plan) {
+                set_flash_message('error', 'Invalid cable plan selected.');
+                header('Location: cable.php');
+                exit();
+            }
+
+            $amount = $plan['price'];
+
+            $stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? AND currency = 'NGN' FOR UPDATE");
+            $stmt->execute([$user_id]);
+            $balance = $stmt->fetchColumn();
+
+            if ($balance < $amount) {
+                set_flash_message('error', 'Insufficient funds.');
+                header('Location: cable.php');
+                exit();
+            }
+
+            $new_balance = $balance - $amount;
+            $stmt = $pdo->prepare("UPDATE wallets SET balance = ? WHERE user_id = ? AND currency = 'NGN'");
+            $stmt->execute([$new_balance, $user_id]);
+
+            $settings_stmt = $pdo->query("SELECT value FROM settings WHERE name = 'datagifting_api_key'");
+            $api_key = $settings_stmt->fetchColumn();
+            $datagifting = new DatagiftingAPI($api_key);
+            $response = $datagifting->purchase_cable_plan($plan['cable_provider'], $iuc_number, $plan['package_code']);
+
+            $status = ($response && $response['status'] === 'success') ? 'completed' : 'failed';
+            $description = $response['desc'] ?? 'Failed to purchase cable plan.';
+
+            $log_stmt = $pdo->prepare("INSERT INTO transactions (user_id, type, amount, status, description) VALUES (?, 'cable', ?, ?, ?)");
+            $log_stmt->execute([$user_id, $amount, $status, $description]);
+
+            if ($status === 'completed') {
+                $pdo->commit();
+                set_flash_message('success', 'Cable subscription successful.');
+            } else {
+                $pdo->rollBack();
+                set_flash_message('error', 'Cable subscription failed. Please try again.');
+            }
+
+            header('Location: cable.php');
+            exit();
+
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            set_flash_message('error', 'An error occurred. Please try again.');
+            header('Location: cable.php');
+            exit();
+        }
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'verify_iuc') {
+    // AJAX IUC Verification
+    header('Content-Type: application/json');
+    $provider = $_POST['cable_provider'];
+    $iuc = $_POST['iuc_number'];
+
+    $settings_stmt = $pdo->query("SELECT value FROM settings WHERE name = 'datagifting_api_key'");
+    $api_key = $settings_stmt->fetchColumn();
+    $datagifting = new DatagiftingAPI($api_key);
+    $response = $datagifting->verify_cable_iuc($provider, $iuc);
+
+    if ($response && $response['status'] === 'success') {
+        echo json_encode(['status' => 'success', 'customer_name' => $response['desc']]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Verification failed.']);
+    }
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'get_cable_plans') {
+    // AJAX Get Cable Plans
+    header('Content-Type: application/json');
+    $provider = $_GET['provider'];
+    $stmt = $pdo->prepare("SELECT * FROM cable_plans WHERE cable_provider = ? ORDER BY price");
+    $stmt->execute([$provider]);
+    echo json_encode($stmt->fetchAll());
+    exit();
 }

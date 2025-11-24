@@ -33,12 +33,26 @@ class DatagiftingAPI {
     }
 
     public function purchase_data($network, $phone_number, $type, $quantity) {
-        // Placeholder for data purchase
         return $this->make_request('data.php', [
             'network' => $network,
             'phone_number' => $phone_number,
             'type' => $type,
             'quantity' => $quantity
+        ]);
+    }
+
+    public function verify_cable_iuc($provider, $iuc_number) {
+        return $this->make_request('verify-cable.php', [
+            'type' => $provider,
+            'iuc_number' => $iuc_number
+        ]);
+    }
+
+    public function purchase_cable_plan($provider, $iuc_number, $package_code) {
+        return $this->make_request('cable.php', [
+            'type' => $provider,
+            'iuc_number' => $iuc_number,
+            'package' => $package_code
         ]);
     }
 }
