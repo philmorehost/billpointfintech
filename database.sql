@@ -35,6 +35,22 @@ CREATE TABLE `settings` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Data Plans Table
+CREATE TABLE `data_plans` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `network` varchar(255) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `quantity` varchar(255) NOT NULL,
+  `price` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `data_plans` (`network`, `type`, `quantity`, `price`) VALUES
+('mtn', 'sme-data', '1gb', 590),
+('mtn', 'sme-data', '2gb', 1180),
+('mtn', 'sme-data', '3gb', 1770),
+('mtn', 'sme-data', '5gb', 2950);
+
 -- Transactions Table
 CREATE TABLE `transactions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
