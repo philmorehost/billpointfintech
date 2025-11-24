@@ -21,6 +21,7 @@ $balance = $stmt->fetchColumn();
         <div class="balance-card">
             <h3>NGN Balance</h3>
             <p>₦<?php echo number_format($balance, 2); ?></p>
+            <a href="fund_wallet.php" class="btn btn-sm">Fund Wallet</a>
         </div>
 
         <!-- Services Grid -->

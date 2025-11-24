@@ -15,8 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $phone = $_POST['phone'];
         $password = $_POST['password'];
         $pin = $_POST['pin'];
+        $bank_code = $_POST['bank_code'];
+        $account_number = $_POST['account_number'];
 
-        if (empty($full_name) || empty($email) || empty($phone) || empty($password) || empty($pin)) {
+        if (empty($full_name) || empty($email) || empty($phone) || empty($password) || empty($pin) || empty($bank_code) || empty($account_number)) {
             set_flash_message('error', 'All fields are required.');
             header('Location: signup.php');
             exit();
@@ -55,8 +57,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit();
             }
 
-            $stmt = $pdo->prepare("INSERT INTO users (full_name, email, phone, password, pin) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([$full_name, $email, $phone, $hashed_password, $hashed_pin]);
+            // First, let's re-verify the account details on the server-side to ensure consistency and prevent manipulation.
+            require_once 'core/paystack_api.php';
+            $paystack = new PaystackAPI();
+            $verify_response = $paystack->resolveAccountNumber($account_number, $bank_code);
+
+            if (!$verify_response || $verify_response['status'] !== true) {
+                set_flash_message('error', 'Could not verify bank account details. Please check and try again.');
+                header('Location: signup.php');
+                exit();
+            }
+
+            $verified_account_name = $verify_response['data']['account_name'];
+            $bank_name = $verify_response['data']['bank_name']; // Get bank name from verification
+
+            // Optional: You might want to check if the verified name closely matches the user's full name.
+            // This is a business logic decision. For now, we'll proceed if verification is successful.
+
+
+            $stmt = $pdo->prepare(
+                "INSERT INTO users (full_name, email, phone, password, pin, bank_name, bank_code, account_number)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->execute([$full_name, $email, $phone, $hashed_password, $hashed_pin, $bank_name, $bank_code, $account_number]);
 
             $user_id = $pdo->lastInsertId();
             $currencies = ['NGN', 'USD', 'CAD', 'USDT', 'USDC'];

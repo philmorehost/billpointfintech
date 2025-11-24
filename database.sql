@@ -9,6 +9,9 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `pin` varchar(255) NOT NULL, -- This will be a hashed value
   `role` enum('user','admin') NOT NULL DEFAULT 'user',
+  `account_number` varchar(255) DEFAULT NULL,
+  `bank_name` varchar(255) DEFAULT NULL,
+  `bank_code` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
@@ -95,8 +98,10 @@ CREATE TABLE `transactions` (
   `user_id` int(11) NOT NULL,
   `type` varchar(255) NOT NULL,
   `amount` decimal(20,4) NOT NULL,
+  `currency` varchar(10) NOT NULL,
   `status` enum('pending','completed','failed') NOT NULL,
   `description` text,
+  `reference` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
