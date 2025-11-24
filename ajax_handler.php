@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/bootstrap.php';
 require_once 'core/datagifting_api.php';
+require_once 'includes/auth_check.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'verify_iuc') {
     if (!validate_csrf_token()) {
@@ -20,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if ($response && $response['status'] === 'success') {
         echo json_encode(['status' => 'success', 'customer_name' => $response['desc']]);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Verification failed.']);
+        $message = $response['desc'] ?? 'Verification failed.';
+        echo json_encode(['status' => 'error', 'message' => $message]);
     }
     exit();
 }
@@ -55,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if ($response && $response['status'] === 'success') {
         echo json_encode(['status' => 'success', 'customer_name' => $response['desc']]);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Verification failed.']);
+        $message = $response['desc'] ?? 'Verification failed.';
+        echo json_encode(['status' => 'error', 'message' => $message]);
     }
     exit();
 }

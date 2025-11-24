@@ -36,20 +36,26 @@ $balance = $stmt->fetchColumn();
         </div>
     </div>
 
-    <!-- Footer Navigation -->
-    <nav class="footer-nav">
-        <a href="dashboard.php">Home</a>
-        <a href="wallet.php">Wallet</a>
-        <a href="history.php">History</a>
-        <a href="profile.php">Profile</a>
-    </nav>
+    <?php include 'includes/footer_nav.php'; ?>
 
     <!-- "More" Services Modal -->
     <div id="more-services-modal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h2>All Services</h2>
-            <!-- List all services here -->
+            <div class="services-grid">
+                <div class="service-item">Airtime</div>
+                <div class="service-item">Data</div>
+                <div class="service-item">Cable TV</div>
+                <div class="service-item">Electricity</div>
+                <div class="service-item">Transfer</div>
+                <div class="service-item">Savings</div>
+                <div class="service-item">Loan</div>
+                <div class="service-item">Crypto</div>
+                <div class="service-item">Exam PINs</div>
+                <div class="service-item">Recharge Card</div>
+                <div class="service-item">Bulk SMS</div>
+            </div>
         </div>
     </div>
 

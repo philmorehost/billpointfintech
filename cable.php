@@ -47,8 +47,23 @@ $csrf_token = generate_csrf_token();
         </div>
     </div>
     <script>
+        const providerInput = document.getElementById('cable_provider');
+        const iucInput = document.getElementById('iuc_number');
+        const verificationResult = document.getElementById('verification-result');
+        const packageGroup = document.getElementById('package-group');
+        const buyBtn = document.getElementById('buy-btn');
+
+        function resetVerification() {
+            verificationResult.innerHTML = '';
+            packageGroup.style.display = 'none';
+            buyBtn.style.display = 'none';
+        }
+
+        providerInput.addEventListener('change', resetVerification);
+        iucInput.addEventListener('input', resetVerification);
+
         document.getElementById('verify-btn').addEventListener('click', function() {
-            const provider = document.getElementById('cable_provider').value;
+            const provider = providerInput.value;
             const iuc = document.getElementById('iuc_number').value;
             const verificationResult = document.getElementById('verification-result');
 

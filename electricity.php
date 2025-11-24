@@ -58,8 +58,25 @@ $discos = $stmt->fetchAll();
         </div>
     </div>
     <script>
+        const providerInput = document.getElementById('disco_provider');
+        const meterNumberInput = document.getElementById('meter_number');
+        const meterTypeInput = document.getElementById('meter_type');
+        const verificationResult = document.getElementById('verification-result');
+        const amountGroup = document.getElementById('amount-group');
+        const buyBtn = document.getElementById('buy-btn');
+
+        function resetVerification() {
+            verificationResult.innerHTML = '';
+            amountGroup.style.display = 'none';
+            buyBtn.style.display = 'none';
+        }
+
+        providerInput.addEventListener('change', resetVerification);
+        meterNumberInput.addEventListener('input', resetVerification);
+        meterTypeInput.addEventListener('change', resetVerification);
+
         document.getElementById('verify-btn').addEventListener('click', function() {
-            const provider = document.getElementById('disco_provider').value;
+            const provider = providerInput.value;
             const meter_number = document.getElementById('meter_number').value;
             const meter_type = document.getElementById('meter_type').value;
             const verificationResult = document.getElementById('verification-result');

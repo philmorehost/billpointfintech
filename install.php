@@ -1,4 +1,8 @@
 <?php
+if (file_exists('installed.lock')) {
+    die('Application already installed.');
+}
+
 session_start();
 
 // --- Action Handler ---
@@ -91,6 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             file_put_contents('includes/config.php', $config_content);
 
             file_put_contents('installed.lock', 'Installation completed on ' . date('Y-m-d H:i:s'));
+
+            unlink(__FILE__);
 
             session_destroy();
 
@@ -237,7 +243,7 @@ $is_writable = is_writable(__DIR__) && is_writable(__DIR__ . '/includes');
             <p class="success">Congratulations! Billpoint has been installed.</p>
             <p><strong>Important:</strong></p>
             <ol>
-                <li>Delete the <code>install.php</code> file.</li>
+                <li>For your security, <code>install.php</code> has been deleted.</li>
                 <li>Set up your API keys in the Admin Panel.</li>
                 <li>Configure your PHP Cron Jobs.</li>
             </ol>

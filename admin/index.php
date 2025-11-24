@@ -43,7 +43,7 @@ $api_key = $stmt->fetchColumn();
 ?>
 <body>
     <h1>Welcome to the Admin Dashboard</h1>
-    <a href="../logout.php">Logout</a>
+    <a href="../logout.php">Logout</a> | <a href="plans.php">Manage Plans</a>
 
     <div class="admin-container">
         <h2>Settings</h2>
