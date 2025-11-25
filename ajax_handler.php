@@ -112,6 +112,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
 
+        case 'get_exchange_rate':
+            require_once 'includes/auth_check.php';
+            require_once 'core/juicyway_api.php';
+
+            $from = $_POST['from'] ?? '';
+            $to = $_POST['to'] ?? '';
+
+            if (empty($from) || empty($to)) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid currency pair.']);
+                exit();
+            }
+
+            $juicyway = new JuicyWayAPI($config['settings']['juicyway_api_key'] ?? null, $config['settings']['juicyway_secret_key'] ?? null);
+            $response = $juicyway->get_exchange_rate($from, $to);
+
+            // Assuming a successful response structure like: { "status": true, "data": { "rate": 1.23 } }
+            if (isset($response['data']['rate'])) {
+                echo json_encode(['status' => 'success', 'rate' => (float)$response['data']['rate']]);
+            } else {
+                $message = $response['message'] ?? 'Could not retrieve exchange rate.';
+                echo json_encode(['status' => 'error', 'message' => $message]);
+            }
+            break;
+
         case 'verify_account':
             // No auth check needed for this action
             require_once 'core/paystack_api.php';

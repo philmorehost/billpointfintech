@@ -235,4 +235,142 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
     }
+
+    if ($_POST['action'] === 'currency_exchange') {
+        $from_currency = $_POST['from_currency'];
+        $to_currency = $_POST['to_currency'];
+        $amount = (float)$_POST['amount'];
+        $pin = $_POST['pin'];
+
+        if (empty($from_currency) || empty($to_currency) || $amount <= 0 || empty($pin) || $from_currency === $to_currency) {
+            set_flash_message('error', 'Invalid input for currency exchange.');
+            header('Location: exchange.php');
+            exit();
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Verify PIN
+            $user_stmt = $pdo->prepare("SELECT pin FROM users WHERE id = ?");
+            $user_stmt->execute([$user_id]);
+            if (!password_verify($pin, $user_stmt->fetchColumn())) {
+                throw new Exception("Incorrect PIN.");
+            }
+
+            // 2. Lock and check source wallet balance
+            $wallet_stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? AND currency = ? FOR UPDATE");
+            $wallet_stmt->execute([$user_id, $from_currency]);
+            $balance = $wallet_stmt->fetchColumn();
+            if ($balance < $amount) {
+                throw new Exception("Insufficient funds in your {$from_currency} wallet.");
+            }
+
+            // 3. Get exchange rate from JuicyWay
+            require_once 'core/juicyway_api.php';
+            $juicyway = new JuicyWayAPI($config['settings']['juicyway_api_key'] ?? null, $config['settings']['juicyway_secret_key'] ?? null);
+            $rate_response = $juicyway->get_exchange_rate($from_currency, $to_currency);
+            if (!isset($rate_response['data']['rate'])) {
+                throw new Exception($rate_response['message'] ?? "Could not fetch exchange rate.");
+            }
+            $rate = (float)$rate_response['data']['rate'];
+            $received_amount = $amount * $rate;
+
+            // 4. Debit source wallet & Credit destination wallet
+            $debit_stmt = $pdo->prepare("UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND currency = ?");
+            $debit_stmt->execute([$amount, $user_id, $from_currency]);
+
+            $credit_stmt = $pdo->prepare("UPDATE wallets SET balance = balance + ? WHERE user_id = ? AND currency = ?");
+            $credit_stmt->execute([$received_amount, $user_id, $to_currency]);
+
+            // 5. Log transaction
+            $log_stmt = $pdo->prepare("INSERT INTO transactions (user_id, type, amount, currency, status, description) VALUES (?, ?, ?, ?, 'completed', ?)");
+            $desc_debit = "Converted {$amount} {$from_currency} to {$to_currency}";
+            $log_stmt->execute([$user_id, 'exchange_debit', $amount, $from_currency, $desc_debit]);
+            $desc_credit = "Received {$received_amount} {$to_currency} from {$from_currency}";
+            $log_stmt->execute([$user_id, 'exchange_credit', $received_amount, $to_currency, $desc_credit]);
+
+            $pdo->commit();
+            set_flash_message('success', "Successfully converted {$amount} {$from_currency} to {$received_amount} {$to_currency}.");
+            header('Location: history.php');
+            exit();
+
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            set_flash_message('error', 'Exchange failed: ' . $e->getMessage());
+            header('Location: exchange.php');
+            exit();
+        }
+    }
+
+    if ($_POST['action'] === 'global_transfer') {
+        $source_currency = $_POST['source_currency'];
+        $amount = (float)$_POST['amount'];
+        $pin = $_POST['pin'];
+        // In a real app, recipient details would be more complex
+        $recipient_details = $_POST['recipient'];
+
+        if (empty($source_currency) || $amount <= 0 || empty($pin)) {
+            set_flash_message('error', 'Invalid input for global transfer.');
+            header('Location: global_transfer.php');
+            exit();
+        }
+
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Verify PIN and check balance
+            $user_stmt = $pdo->prepare("SELECT pin FROM users WHERE id = ?");
+            $user_stmt->execute([$user_id]);
+            if (!password_verify($pin, $user_stmt->fetchColumn())) {
+                throw new Exception("Incorrect PIN.");
+            }
+
+            $wallet_stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? AND currency = ? FOR UPDATE");
+            $wallet_stmt->execute([$user_id, $source_currency]);
+            $balance = $wallet_stmt->fetchColumn();
+            if ($balance < $amount) {
+                throw new Exception("Insufficient funds.");
+            }
+
+            // 2. Debit user's wallet
+            $debit_stmt = $pdo->prepare("UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND currency = ?");
+            $debit_stmt->execute([$amount, $user_id, $source_currency]);
+
+            // 3. Call JuicyWay API (simplified)
+            require_once 'core/juicyway_api.php';
+            $juicyway = new JuicyWayAPI($config['settings']['juicyway_api_key'] ?? null, $config['settings']['juicyway_secret_key'] ?? null);
+            $transfer_data = [
+                'amount' => $amount,
+                'currency' => $_POST['destination_currency'],
+                'beneficiary' => $recipient_details
+            ];
+            $response = $juicyway->create_global_transfer($transfer_data);
+
+            if (!isset($response['status']) || $response['status'] !== true) {
+                 throw new Exception($response['message'] ?? "Global transfer initiation failed.");
+            }
+            $reference = $response['data']['reference'] ?? 'jw_' . uniqid();
+
+            // 4. Log transaction as pending
+            $desc = "Global transfer of {$amount} {$source_currency} to {$recipient_details['name']} initiated.";
+            $log_stmt = $pdo->prepare("INSERT INTO transactions (user_id, type, amount, currency, status, description, reference) VALUES (?, ?, ?, ?, 'pending', ?, ?)");
+            $log_stmt->execute([$user_id, 'global_transfer', $amount, $source_currency, $desc, $reference]);
+
+            $pdo->commit();
+            set_flash_message('success', 'Your global transfer has been initiated.');
+            header('Location: history.php');
+            exit();
+
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            set_flash_message('error', 'Transfer failed: ' . $e->getMessage());
+            header('Location: global_transfer.php');
+            exit();
+        }
+    }
 }

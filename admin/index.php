@@ -29,13 +29,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $paystack_key = $_POST['paystack_secret_key'] ?? '';
         $monnify_api_key = $_POST['monnify_api_key'] ?? '';
         $monnify_secret_key = $_POST['monnify_secret_key'] ?? '';
+        $juicyway_api_key = $_POST['juicyway_api_key'] ?? '';
+        $juicyway_secret_key = $_POST['juicyway_secret_key'] ?? '';
 
         $dg_success = save_setting($pdo, 'datagifting_api_key', $datagifting_key);
         $ps_success = save_setting($pdo, 'paystack_secret_key', $paystack_key);
         $mn_api_success = save_setting($pdo, 'monnify_api_key', $monnify_api_key);
         $mn_secret_success = save_setting($pdo, 'monnify_secret_key', $monnify_secret_key);
+        $jw_api_success = save_setting($pdo, 'juicyway_api_key', $juicyway_api_key);
+        $jw_secret_success = save_setting($pdo, 'juicyway_secret_key', $juicyway_secret_key);
 
-        if ($dg_success && $ps_success && $mn_api_success && $mn_secret_success) {
+        if ($dg_success && $ps_success && $mn_api_success && $mn_secret_success && $jw_api_success && $jw_secret_success) {
             // Clear the settings cache
             $settings_cache_file = __DIR__ . '/../cache/settings.json';
             if (file_exists($settings_cache_file)) {
@@ -59,6 +63,8 @@ $api_key = $settings['datagifting_api_key'] ?? '';
 $paystack_key = $settings['paystack_secret_key'] ?? '';
 $monnify_api_key = $settings['monnify_api_key'] ?? '';
 $monnify_secret_key = $settings['monnify_secret_key'] ?? '';
+$juicyway_api_key = $settings['juicyway_api_key'] ?? '';
+$juicyway_secret_key = $settings['juicyway_secret_key'] ?? '';
 
 
 $csrf_token = generate_csrf_token();
@@ -103,6 +109,18 @@ $csrf_token = generate_csrf_token();
              <div class="form-group">
                 <label for="monnify_secret_key">Monnify Secret Key</label>
                 <input type="text" id="monnify_secret_key" name="monnify_secret_key" value="<?php echo htmlspecialchars((string)$monnify_secret_key); ?>">
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+                <label for="juicyway_api_key">JuicyWay API Key</label>
+                <input type="text" id="juicyway_api_key" name="juicyway_api_key" value="<?php echo htmlspecialchars((string)$juicyway_api_key); ?>">
+            </div>
+
+             <div class="form-group">
+                <label for="juicyway_secret_key">JuicyWay Secret Key</label>
+                <input type="text" id="juicyway_secret_key" name="juicyway_secret_key" value="<?php echo htmlspecialchars((string)$juicyway_secret_key); ?>">
             </div>
 
             <button type="submit" class="btn">Save All Settings</button>
