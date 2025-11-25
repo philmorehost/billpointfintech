@@ -1,5 +1,6 @@
 <nav class="footer-nav">
     <a href="dashboard.php">Home</a>
+    <a href="savings.php">Savings</a>
     <a href="wallet.php">Wallet</a>
     <a href="exchange.php">Exchange</a>
     <a href="history.php">History</a>
