@@ -3,7 +3,35 @@ require_once 'includes/bootstrap.php';
 require_once 'includes/auth_check.php';
 require_once 'core/datagifting_api.php';
 
-function process_transaction(PDO $pdo, $user_id, $amount, $type, callable $api_call, $redirect_path) {
+function check_transaction_limit(PDO $pdo, $target_id) {
+    $stmt = $pdo->prepare("SELECT * FROM transaction_limits WHERE target_id = ?");
+    $stmt->execute([$target_id]);
+    $limit = $stmt->fetch();
+
+    if ($limit && !$limit['is_whitelisted']) {
+        $count_stmt = $pdo->prepare("
+            SELECT COUNT(*) FROM transactions
+            WHERE description LIKE ? AND created_at >= DATE_SUB(NOW(), INTERVAL ? SECOND)
+        ");
+        $count_stmt->execute(["%{$target_id}%", $limit['time_frame_seconds']]);
+        $transaction_count = $count_stmt->fetchColumn();
+
+        if ($transaction_count >= $limit['max_count']) {
+            send_admin_alert("Transaction limit breached for target ID: {$target_id}", "Security Alert: Transaction Limit");
+            return false; // Limit breached
+        }
+    }
+    return true; // OK to proceed
+}
+
+
+function process_transaction(PDO $pdo, $user_id, $amount, $type, $target_id, callable $api_call, $redirect_path) {
+    if (!check_transaction_limit($pdo, $target_id)) {
+        set_flash_message('error', 'Transaction limit exceeded for this recipient. Please try again later.');
+        header("Location: $redirect_path");
+        exit();
+    }
+
     try {
         $pdo->beginTransaction();
 
@@ -78,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
 
-        process_transaction($pdo, $user_id, $amount, 'airtime', function() use ($datagifting, $network, $phone_number, $amount) {
+        process_transaction($pdo, $user_id, $amount, 'airtime', $phone_number, function() use ($datagifting, $network, $phone_number, $amount) {
             return $datagifting->purchase_airtime($network, $phone_number, $amount);
         }, 'airtime.php');
     }
@@ -103,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
 
-        process_transaction($pdo, $user_id, $plan['price'], 'data', function() use ($datagifting, $plan, $phone_number) {
+        process_transaction($pdo, $user_id, $plan['price'], 'data', $phone_number, function() use ($datagifting, $plan, $phone_number) {
             return $datagifting->purchase_data($plan['network'], $phone_number, $plan['type'], $plan['quantity']);
         }, 'data.php');
     }
@@ -128,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
 
-        process_transaction($pdo, $user_id, $plan['price'], 'cable', function() use ($datagifting, $plan, $iuc_number) {
+        process_transaction($pdo, $user_id, $plan['price'], 'cable', $iuc_number, function() use ($datagifting, $plan, $iuc_number) {
             return $datagifting->purchase_cable_plan($plan['cable_provider'], $iuc_number, $plan['package_code']);
         }, 'cable.php');
     }
@@ -145,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
 
-        process_transaction($pdo, $user_id, $amount, 'electricity', function() use ($datagifting, $provider, $meter_number, $meter_type, $amount) {
+        process_transaction($pdo, $user_id, $amount, 'electricity', $meter_number, function() use ($datagifting, $provider, $meter_number, $meter_type, $amount) {
             return $datagifting->purchase_electricity($provider, $meter_number, $meter_type, $amount);
         }, 'electricity.php');
     }
@@ -172,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         $total_amount = $product['price'] * $quantity;
 
-        process_transaction($pdo, $user_id, $total_amount, 'exam', function() use ($datagifting, $product, $quantity) {
+        process_transaction($pdo, $user_id, $total_amount, 'exam', $product['product_code'], function() use ($datagifting, $product, $quantity) {
             return $datagifting->purchase_exam_pin($product['product_code'], $quantity);
         }, 'exam.php');
     }

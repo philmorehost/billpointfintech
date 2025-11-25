@@ -149,3 +149,28 @@ CREATE TABLE `p2p_transfers` (
   FOREIGN KEY (`sender_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`recipient_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Transaction Limits Table (Risk Management)
+CREATE TABLE `transaction_limits` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `target_id` varchar(255) NOT NULL,
+  `max_count` int(11) NOT NULL,
+  `time_frame_seconds` int(11) NOT NULL,
+  `is_whitelisted` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `target_id` (`target_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Audit Log Table
+CREATE TABLE `audit_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `admin_id` int(11) NOT NULL,
+  `action` varchar(255) NOT NULL,
+  `target_user_id` int(11) DEFAULT NULL,
+  `details` text,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

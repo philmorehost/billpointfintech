@@ -150,3 +150,20 @@ input[type="email"], input[type="password"], input[type="text"], input[type="num
     border-radius: 5px;
     resize: vertical;
 }
+
+/* Impersonation Banner */
+.impersonation-banner {
+    background-color: #ffc107;
+    color: #333;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    top: 60px; /* Adjust if header height changes */
+    width: 100%;
+    z-index: 1001;
+    border-bottom: 2px solid #e0a800;
+}
+.impersonation-banner a {
+    color: #0056b3;
+    font-weight: bold;
+}

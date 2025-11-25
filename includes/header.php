@@ -7,6 +7,12 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
+    <?php if (isset($_SESSION['original_admin_id'])): ?>
+    <div class="impersonation-banner">
+        You are currently impersonating a user.
+        <a href="admin/impersonate.php?action=stop">Return to your Admin session</a>.
+    </div>
+    <?php endif; ?>
     <header class="main-header">
         <div class="logo">
             <a href="dashboard.php">Billpoint</a>

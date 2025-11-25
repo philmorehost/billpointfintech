@@ -3,6 +3,7 @@ session_start();
 
 require_once 'database.php';
 require_once 'flash_messages.php';
+require_once 'functions.php';
 
 // --- Application Configuration ---
 $settings_cache_file = __DIR__ . '/../cache/settings.json';
