@@ -25,6 +25,7 @@ class DatagiftingAPI {
         if (curl_errno($ch)) {
             // cURL error
             $error_msg = curl_error($ch);
+            error_log("Datagifting API cURL Error for endpoint {$endpoint}: " . $error_msg);
             curl_close($ch);
             return ['status' => 'error', 'desc' => "cURL Error: " . $error_msg];
         }
@@ -33,6 +34,7 @@ class DatagiftingAPI {
         curl_close($ch);
 
         if ($http_code != 200) {
+            error_log("Datagifting API HTTP Error for endpoint {$endpoint}: " . $http_code . " | Response: " . $response);
             return ['status' => 'error', 'desc' => "HTTP Error: " . $http_code];
         }
 

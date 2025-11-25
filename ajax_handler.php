@@ -76,6 +76,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
 
+        case 'add_reply':
+            require_once 'includes/auth_check.php';
+            $ticket_id = $_POST['ticket_id'] ?? 0;
+            $message = trim($_POST['message'] ?? '');
+            $user_id = $_SESSION['user_id'];
+
+            if (empty($message) || empty($ticket_id)) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid input.']);
+                exit();
+            }
+
+            // Verify the user owns the ticket
+            $stmt = $pdo->prepare("SELECT id FROM tickets WHERE id = ? AND user_id = ?");
+            $stmt->execute([$ticket_id, $user_id]);
+            if (!$stmt->fetch()) {
+                echo json_encode(['status' => 'error', 'message' => 'Permission denied.']);
+                exit();
+            }
+
+            try {
+                $pdo->beginTransaction();
+                $stmt = $pdo->prepare("INSERT INTO ticket_messages (ticket_id, sender_id, message) VALUES (?, ?, ?)");
+                $stmt->execute([$ticket_id, $user_id, $message]);
+
+                // Update ticket status to show user has replied
+                $ticket_stmt = $pdo->prepare("UPDATE tickets SET status = 'user_reply' WHERE id = ?");
+                $ticket_stmt->execute([$ticket_id]);
+
+                $pdo->commit();
+                $new_message = [
+                    'message' => htmlspecialchars($message),
+                    'created_at' => date('M d, H:i')
+                ];
+                echo json_encode(['status' => 'success', 'message' => $new_message]);
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                echo json_encode(['status' => 'error', 'message' => 'Database error.']);
+            }
+            break;
+
+        case 'add_admin_reply':
+            // Admin auth check
+            if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+                 echo json_encode(['status' => 'error', 'message' => 'Unauthorized.']);
+                 exit();
+            }
+            $ticket_id = $_POST['ticket_id'] ?? 0;
+            $message = trim($_POST['message'] ?? '');
+            $admin_id = $_SESSION['user_id'];
+
+            if (empty($message) || empty($ticket_id)) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid input.']);
+                exit();
+            }
+
+            try {
+                $pdo->beginTransaction();
+                $stmt = $pdo->prepare("INSERT INTO ticket_messages (ticket_id, sender_id, message, is_admin_reply) VALUES (?, ?, ?, 1)");
+                $stmt->execute([$ticket_id, $admin_id, $message]);
+
+                // Set ticket status back to open
+                $ticket_stmt = $pdo->prepare("UPDATE tickets SET status = 'open' WHERE id = ?");
+                $ticket_stmt->execute([$ticket_id]);
+
+                $pdo->commit();
+                $new_message = [
+                    'message' => htmlspecialchars($message),
+                    'created_at' => date('M d, H:i')
+                ];
+                 echo json_encode(['status' => 'success', 'message' => $new_message]);
+            } catch(Exception $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                echo json_encode(['status' => 'error', 'message' => 'Database error.']);
+            }
+            break;
+
         default:
             echo json_encode(['status' => 'error', 'message' => 'Unknown action specified.']);
             break;
