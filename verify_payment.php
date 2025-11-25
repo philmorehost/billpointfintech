@@ -16,7 +16,7 @@ if (!$reference) {
 
 try {
     // Verify the transaction with Paystack
-    $paystack = new PaystackAPI();
+    $paystack = new PaystackAPI($config['settings']['paystack_secret_key'] ?? null);
     $response = $paystack->verifyTransaction($reference);
 
     if ($response && isset($response['status']) && $response['status'] === true) {

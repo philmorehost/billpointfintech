@@ -21,9 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $provider = $_POST['cable_provider'];
             $iuc = $_POST['iuc_number'];
 
-            $settings_stmt = $pdo->query("SELECT value FROM settings WHERE name = 'datagifting_api_key'");
-            $api_key = $settings_stmt->fetchColumn();
-            $datagifting = new DatagiftingAPI($api_key);
+            $datagifting = new DatagiftingAPI($config['settings']['datagifting_api_key'] ?? null);
             $response = $datagifting->verify_cable_iuc($provider, $iuc);
 
             if ($response && $response['status'] === 'success') {
@@ -40,15 +38,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $meter_number = $_POST['meter_number'];
             $type = $_POST['type'];
 
-            $settings_stmt = $pdo->query("SELECT value FROM settings WHERE name = 'datagifting_api_key'");
-            $api_key = $settings_stmt->fetchColumn();
-            $datagifting = new DatagiftingAPI($api_key);
+            $datagifting = new DatagiftingAPI($config['settings']['datagifting_api_key'] ?? null);
             $response = $datagifting->verify_meter_number($provider, $meter_number, $type);
 
             if ($response && $response['status'] === 'success') {
                 echo json_encode(['status' => 'success', 'customer_name' => $response['desc']]);
             } else {
                 $message = $response['desc'] ?? 'Verification failed.';
+                echo json_encode(['status' => 'error', 'message' => $message]);
+            }
+            break;
+
+        case 'verify_kyc':
+            require_once 'includes/auth_check.php';
+            require_once 'core/monnify_api.php';
+
+            $user_id = $_SESSION['user_id'];
+            $bvn = $_POST['bvn'] ?? '';
+            $name = $_POST['name'] ?? '';
+            $dob = $_POST['dob'] ?? '';
+            $mobileNo = $_POST['mobileNo'] ?? '';
+
+            if (empty($bvn) || empty($name) || empty($dob) || empty($mobileNo)) {
+                echo json_encode(['status' => 'error', 'message' => 'All fields are required.']);
+                exit();
+            }
+
+            $monnify = new MonnifyAPI($config['settings']['monnify_api_key'] ?? null, $config['settings']['monnify_secret_key'] ?? null);
+            $response = $monnify->verify_bvn($bvn, $name, $dob, $mobileNo);
+
+            if (isset($response['responseBody']['matchStatus']) && $response['responseBody']['matchStatus'] === 'MATCH') {
+                // Verification successful, update user's record
+                try {
+                    $stmt = $pdo->prepare("UPDATE users SET bvn = ?, kyc_level = 1, kyc_verified_at = NOW() WHERE id = ?");
+                    $stmt->execute([$bvn, $user_id]);
+                    echo json_encode(['status' => 'success', 'message' => 'BVN verification successful! Your account is now verified.']);
+                } catch (Exception $e) {
+                    error_log("KYC DB Update Error: " . $e->getMessage());
+                    echo json_encode(['status' => 'error', 'message' => 'Verification was successful, but we could not update your profile. Please contact support.']);
+                }
+            } else {
+                $message = $response['responseMessage'] ?? 'Verification failed. Please check your details and try again.';
                 echo json_encode(['status' => 'error', 'message' => $message]);
             }
             break;
@@ -65,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit();
             }
 
-            $paystack = new PaystackAPI();
+            $paystack = new PaystackAPI($config['settings']['paystack_secret_key'] ?? null);
             $response = $paystack->resolveAccountNumber($account_number, $bank_code);
 
             if ($response && isset($response['status']) && $response['status'] === true) {

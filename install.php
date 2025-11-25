@@ -119,7 +119,11 @@ $extensions = [
 ];
 $extensions_ok = !in_array(false, $extensions);
 
-$is_writable = is_writable(__DIR__) && is_writable(__DIR__ . '/includes');
+$cache_dir = __DIR__ . '/cache';
+if (!is_dir($cache_dir)) {
+    @mkdir($cache_dir, 0755, true);
+}
+$is_writable = is_writable(__DIR__ . '/includes') && is_writable($cache_dir);
 
 ?>
 <!DOCTYPE html>

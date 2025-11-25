@@ -27,11 +27,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($action === 'save_settings') {
         $datagifting_key = $_POST['datagifting_api_key'] ?? '';
         $paystack_key = $_POST['paystack_secret_key'] ?? '';
+        $monnify_api_key = $_POST['monnify_api_key'] ?? '';
+        $monnify_secret_key = $_POST['monnify_secret_key'] ?? '';
 
         $dg_success = save_setting($pdo, 'datagifting_api_key', $datagifting_key);
         $ps_success = save_setting($pdo, 'paystack_secret_key', $paystack_key);
+        $mn_api_success = save_setting($pdo, 'monnify_api_key', $monnify_api_key);
+        $mn_secret_success = save_setting($pdo, 'monnify_secret_key', $monnify_secret_key);
 
-        if ($dg_success && $ps_success) {
+        if ($dg_success && $ps_success && $mn_api_success && $mn_secret_success) {
+            // Clear the settings cache
+            $settings_cache_file = __DIR__ . '/../cache/settings.json';
+            if (file_exists($settings_cache_file)) {
+                unlink($settings_cache_file);
+            }
             set_flash_message('success', 'Settings saved successfully.');
         } else {
             set_flash_message('error', 'Failed to save one or more settings.');
@@ -42,11 +51,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch current settings
-$stmt_dg = $pdo->query("SELECT value FROM settings WHERE name = 'datagifting_api_key'");
-$api_key = $stmt_dg->fetchColumn();
-$stmt_ps = $pdo->query("SELECT value FROM settings WHERE name = 'paystack_secret_key'");
-$paystack_key = $stmt_ps->fetchColumn();
+// Fetch all settings at once
+$settings_stmt = $pdo->query("SELECT name, value FROM settings");
+$settings = $settings_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+$api_key = $settings['datagifting_api_key'] ?? '';
+$paystack_key = $settings['paystack_secret_key'] ?? '';
+$monnify_api_key = $settings['monnify_api_key'] ?? '';
+$monnify_secret_key = $settings['monnify_secret_key'] ?? '';
+
 
 $csrf_token = generate_csrf_token();
 ?>
@@ -78,6 +91,18 @@ $csrf_token = generate_csrf_token();
             <div class="form-group">
                 <label for="paystack_secret_key">Paystack Secret Key</label>
                 <input type="text" id="paystack_secret_key" name="paystack_secret_key" value="<?php echo htmlspecialchars((string)$paystack_key); ?>">
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+                <label for="monnify_api_key">Monnify API Key</label>
+                <input type="text" id="monnify_api_key" name="monnify_api_key" value="<?php echo htmlspecialchars((string)$monnify_api_key); ?>">
+            </div>
+
+             <div class="form-group">
+                <label for="monnify_secret_key">Monnify Secret Key</label>
+                <input type="text" id="monnify_secret_key" name="monnify_secret_key" value="<?php echo htmlspecialchars((string)$monnify_secret_key); ?>">
             </div>
 
             <button type="submit" class="btn">Save All Settings</button>

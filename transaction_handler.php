@@ -32,7 +32,7 @@ function process_transaction(PDO $pdo, $user_id, $amount, $type, callable $api_c
             $description = $response['desc'];
         }
 
-        $log_stmt = $pdo->prepare("INSERT INTO transactions (user_id, type, amount, status, description) VALUES (?, ?, ?, ?, ?)");
+        $log_stmt = $pdo->prepare("INSERT INTO transactions (user_id, type, amount, currency, status, description) VALUES (?, ?, ?, 'NGN', ?, ?)");
         $log_stmt->execute([$user_id, $type, $amount, $status, $description]);
 
         if ($status === 'completed') {
@@ -48,7 +48,12 @@ function process_transaction(PDO $pdo, $user_id, $amount, $type, callable $api_c
         }
         set_flash_message('error', 'An error occurred. Please try again.');
     }
-    header("Location: $redirect_path");
+
+    if ($status === 'completed') {
+        header("Location: history.php");
+    } else {
+        header("Location: $redirect_path");
+    }
     exit();
 }
 
@@ -60,9 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     $user_id = $_SESSION['user_id'];
-    $settings_stmt = $pdo->query("SELECT value FROM settings WHERE name = 'datagifting_api_key'");
-    $api_key = $settings_stmt->fetchColumn();
-    $datagifting = new DatagiftingAPI($api_key);
+    $datagifting = new DatagiftingAPI($config['settings']['datagifting_api_key'] ?? null);
 
     if ($_POST['action'] === 'buy_airtime') {
         $network = $_POST['network'];
@@ -82,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'buy_data') {
         $phone_number = $_POST['phone_number'];
-        $plan_id = (int)$_POST['data_plan'];
+        $plan_id = (int)$_POST['data_plan_id'];
 
         if (empty($phone_number) || empty($plan_id)) {
             set_flash_message('error', 'Invalid input.');
@@ -106,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'buy_cable_plan') {
-        $plan_id = (int)$_POST['cable_plan'];
+        $plan_id = (int)$_POST['cable_plan_id'];
         $iuc_number = $_POST['iuc_number'];
 
         if (empty($plan_id) || empty($iuc_number)) {
@@ -131,8 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'buy_electricity') {
-        $provider = $_POST['disco_provider'];
-        $meter_type = $_POST['meter_type'];
+        $provider = $_POST['provider'];
+        $meter_type = $_POST['type'];
         $meter_number = $_POST['meter_number'];
         $amount = (int)$_POST['amount'];
 
@@ -148,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'buy_exam_pin') {
-        $product_id = (int)$_POST['exam_product'];
+        $product_id = (int)$_POST['exam_product_id'];
         $quantity = (int)$_POST['quantity'];
 
         if (empty($product_id) || $quantity < 1) {

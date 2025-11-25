@@ -3,7 +3,7 @@ require_once 'includes/bootstrap.php';
 require_once 'includes/auth_check.php';
 
 $user_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT full_name, email, phone FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT full_name, email, phone, kyc_verified_at FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
@@ -26,6 +26,14 @@ $csrf_token = generate_csrf_token();
             <p><strong>Full Name:</strong> <?php echo htmlspecialchars($user['full_name']); ?></p>
             <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
             <p><strong>Phone:</strong> <?php echo htmlspecialchars($user['phone']); ?></p>
+            <p><strong>KYC Status:</strong>
+                <?php if ($user['kyc_verified_at']): ?>
+                    <span class="status-open">Verified</span>
+                <?php else: ?>
+                    <span class="status-closed">Not Verified</span>
+                    <a href="kyc.php" style="margin-left: 10px;" class="btn btn-sm">Verify Now</a>
+                <?php endif; ?>
+            </p>
         </div>
 
         <hr>

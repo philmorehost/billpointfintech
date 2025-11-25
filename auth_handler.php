@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             // First, let's re-verify the account details on the server-side to ensure consistency and prevent manipulation.
             require_once 'core/paystack_api.php';
-            $paystack = new PaystackAPI();
+            $paystack = new PaystackAPI($config['settings']['paystack_secret_key'] ?? null);
             $verify_response = $paystack->resolveAccountNumber($account_number, $bank_code);
 
             if (!$verify_response || $verify_response['status'] !== true) {
@@ -82,9 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt->execute([$full_name, $email, $phone, $hashed_password, $hashed_pin, $bank_name, $bank_code, $account_number]);
 
             $user_id = $pdo->lastInsertId();
-            $currencies = ['NGN', 'USD', 'CAD', 'USDT', 'USDC'];
             $wallet_stmt = $pdo->prepare("INSERT INTO wallets (user_id, currency) VALUES (?, ?)");
-            foreach ($currencies as $currency) {
+            foreach ($config['wallet_currencies'] as $currency) {
                 $wallet_stmt->execute([$user_id, $currency]);
             }
 

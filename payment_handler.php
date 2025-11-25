@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt->execute([$user_id, $amount, $reference, 'Wallet funding initiated.']);
 
             // Initialize Paystack transaction
-            $paystack = new PaystackAPI();
+            $paystack = new PaystackAPI($config['settings']['paystack_secret_key'] ?? null);
             $response = $paystack->initializeTransaction($user_email, $amount_kobo, $reference);
 
             if ($response && $response['status'] === true) {
@@ -70,7 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
         } catch (Exception $e) {
-            set_flash_message('error', 'An unexpected error occurred. ' . $e->getMessage());
+            error_log("Payment Handler Error: " . $e->getMessage());
+            set_flash_message('error', 'An unexpected error occurred. Please try again or contact support.');
             header('Location: fund_wallet.php');
             exit();
         }

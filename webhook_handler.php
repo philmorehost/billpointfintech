@@ -13,8 +13,7 @@ $event_payload = @file_get_contents("php://input");
 $paystack_signature = $_SERVER['HTTP_X_PAYSTACK_SIGNATURE'] ?? '';
 
 // Get the secret key from settings to validate the signature
-$stmt = $pdo->query("SELECT value FROM settings WHERE name = 'paystack_secret_key'");
-$secret_key = $stmt->fetchColumn();
+$secret_key = $config['settings']['paystack_secret_key'] ?? null;
 
 if (!$secret_key) {
     // If we don't have a secret key, we can't verify the webhook.

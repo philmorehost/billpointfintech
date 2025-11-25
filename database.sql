@@ -12,6 +12,10 @@ CREATE TABLE `users` (
   `account_number` varchar(255) DEFAULT NULL,
   `bank_name` varchar(255) DEFAULT NULL,
   `bank_code` varchar(255) DEFAULT NULL,
+  `bvn` varchar(11) DEFAULT NULL,
+  `nin` varchar(11) DEFAULT NULL,
+  `kyc_level` int(11) NOT NULL DEFAULT '0',
+  `kyc_verified_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)

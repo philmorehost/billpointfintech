@@ -5,10 +5,8 @@ class PaystackAPI {
     private $secret_key;
     private $base_url = 'https://api.paystack.co';
 
-    public function __construct() {
-        global $pdo;
-        $stmt = $pdo->query("SELECT value FROM settings WHERE name = 'paystack_secret_key'");
-        $this->secret_key = $stmt->fetchColumn();
+    public function __construct($secret_key) {
+        $this->secret_key = $secret_key;
     }
 
     private function sendRequest($url, $method = 'GET', $data = []) {

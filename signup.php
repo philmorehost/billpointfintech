@@ -2,7 +2,7 @@
 require_once 'includes/bootstrap.php';
 require_once 'core/paystack_api.php';
 
-$paystack = new PaystackAPI();
+$paystack = new PaystackAPI($config['settings']['paystack_secret_key'] ?? null);
 $banks = [];
 $bank_list_result = $paystack->getBankList();
 if ($bank_list_result && $bank_list_result['status'] === true) {
