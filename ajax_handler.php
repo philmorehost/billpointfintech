@@ -83,6 +83,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
 
+        case 'verify_recipient':
+            require_once 'includes/auth_check.php';
+            $email = $_POST['email'] ?? '';
+
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['status' => 'error', 'message' => 'Invalid email format.']);
+                exit();
+            }
+
+            // Check if the recipient is the sender themselves
+            $stmt = $pdo->prepare("SELECT email FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $sender_email = $stmt->fetchColumn();
+            if (strtolower($email) === strtolower($sender_email)) {
+                echo json_encode(['status' => 'error', 'message' => 'You cannot send money to yourself.']);
+                exit();
+            }
+
+            $stmt = $pdo->prepare("SELECT full_name FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $recipient = $stmt->fetch();
+
+            if ($recipient) {
+                echo json_encode(['status' => 'success', 'recipient_name' => $recipient['full_name']]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Recipient not found.']);
+            }
+            break;
+
         case 'verify_account':
             // No auth check needed for this action
             require_once 'core/paystack_api.php';

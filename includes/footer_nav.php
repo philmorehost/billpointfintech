@@ -2,6 +2,7 @@
     <a href="dashboard.php">Home</a>
     <a href="wallet.php">Wallet</a>
     <a href="history.php">History</a>
+    <a href="p2p_transfer.php">Transfer</a>
     <a href="support.php">Support</a>
     <a href="kyc.php">KYC</a>
     <a href="profile.php">Profile</a>

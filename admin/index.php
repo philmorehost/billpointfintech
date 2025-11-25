@@ -73,7 +73,7 @@ $csrf_token = generate_csrf_token();
 </head>
 <body>
     <h1>Welcome to the Admin Dashboard</h1>
-    <a href="../logout.php">Logout</a> | <a href="plans.php">Manage Plans</a> | <a href="support.php">Support Tickets</a>
+    <a href="../logout.php">Logout</a> | <a href="plans.php">Manage Plans</a> | <a href="support.php">Support Tickets</a> | <a href="p2p_transfers.php">P2P Transfers</a>
 
     <div class="admin-container">
         <h2>Settings</h2>

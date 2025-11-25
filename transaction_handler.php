@@ -176,4 +176,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             return $datagifting->purchase_exam_pin($product['product_code'], $quantity);
         }, 'exam.php');
     }
+
+    if ($_POST['action'] === 'p2p_transfer') {
+        $recipient_email = $_POST['recipient_email'];
+        $amount = (float)$_POST['amount'];
+        $pin = $_POST['pin'];
+
+        if (empty($recipient_email) || $amount <= 0 || empty($pin)) {
+            set_flash_message('error', 'Invalid input.');
+            header('Location: p2p_transfer.php');
+            exit();
+        }
+
+        try {
+            // 1. Verify user's PIN
+            $user_stmt = $pdo->prepare("SELECT pin, id FROM users WHERE id = ?");
+            $user_stmt->execute([$user_id]);
+            $user = $user_stmt->fetch();
+            if (!$user || !password_verify($pin, $user['pin'])) {
+                set_flash_message('error', 'Incorrect PIN.');
+                header('Location: p2p_transfer.php');
+                exit();
+            }
+
+            // 2. Check balance
+            $wallet_stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? AND currency = 'NGN'");
+            $wallet_stmt->execute([$user_id]);
+            $balance = $wallet_stmt->fetchColumn();
+            if ($balance < $amount) {
+                set_flash_message('error', 'Insufficient funds.');
+                header('Location: p2p_transfer.php');
+                exit();
+            }
+
+            // 3. Get recipient ID
+            $recipient_stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $recipient_stmt->execute([$recipient_email]);
+            $recipient = $recipient_stmt->fetch();
+            if (!$recipient || $recipient['id'] == $user_id) {
+                set_flash_message('error', 'Invalid recipient.');
+                header('Location: p2p_transfer.php');
+                exit();
+            }
+            $recipient_id = $recipient['id'];
+
+            // 4. Create pending P2P transfer record
+            $stmt = $pdo->prepare("INSERT INTO p2p_transfers (sender_id, recipient_id, amount) VALUES (?, ?, ?)");
+            $stmt->execute([$user_id, $recipient_id, $amount]);
+
+            set_flash_message('success', 'Transfer request submitted and is pending admin approval.');
+            header('Location: history.php');
+            exit();
+
+        } catch (Exception $e) {
+            error_log("P2P Transfer Error: " . $e->getMessage());
+            set_flash_message('error', 'An unexpected error occurred.');
+            header('Location: p2p_transfer.php');
+            exit();
+        }
+    }
 }
