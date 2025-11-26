@@ -1,6 +1,5 @@
 <?php
 require_once '../includes/bootstrap.php';
-require_once '../includes/auth_check.php';
 require_once '../includes/admin_check.php';
 
 $service_id = $_GET['id'] ?? 0;

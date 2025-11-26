@@ -1,6 +1,5 @@
 <?php
 require_once '../includes/bootstrap.php';
-require_once '../includes/auth_check.php';
 require_once '../includes/admin_check.php';
 
 $stmt = $pdo->query("SELECT id, full_name, email, phone, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC");

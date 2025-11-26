@@ -14,6 +14,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     $action = $_POST['action'];
 
+    if ($action === 'generate_virtual_account') {
+        $user_id = $_SESSION['user_id'];
+
+        $stmt = $pdo->prepare("SELECT full_name, email, phone, kyc_level FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $user = $stmt->fetch();
+
+        if (!$user || $user['kyc_level'] < 1) {
+            set_flash_message('error', 'You must complete KYC verification to generate a virtual account.');
+            header('Location: virtual_account.php');
+            exit();
+        }
+
+        list($first_name, $last_name) = explode(' ', $user['full_name'], 2);
+        $tx_ref = 'VA-' . $user_id . '-' . time();
+
+        require_once 'core/flutterwave_api.php';
+        $flutterwave = new FlutterwaveAPI($config['settings']['flutterwave_secret_key'] ?? null);
+        $response = $flutterwave->generate_virtual_account($user['email'], $first_name, $last_name, $user['phone'], $tx_ref);
+
+        if (isset($response['status']) && $response['status'] === 'success' && isset($response['data']['account_number'])) {
+            $account_number = $response['data']['account_number'];
+            $bank_name = $response['data']['bank_name'];
+
+            $update_stmt = $pdo->prepare("UPDATE users SET virtual_account_number = ?, virtual_bank_name = ?, virtual_account_ref = ? WHERE id = ?");
+            $update_stmt->execute([$account_number, $bank_name, $tx_ref, $user_id]);
+
+            set_flash_message('success', 'Your virtual account has been generated successfully.');
+        } else {
+            $message = $response['message'] ?? 'Failed to generate virtual account. Please try again later.';
+            set_flash_message('error', $message);
+        }
+        header('Location: virtual_account.php');
+        exit();
+    }
+
     if ($action === 'initialize_funding') {
         $amount = filter_input(INPUT_POST, 'amount', FILTER_VALIDATE_FLOAT);
 

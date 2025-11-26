@@ -1,6 +1,5 @@
 <?php
 require_once '../includes/bootstrap.php';
-require_once '../includes/auth_check.php';
 require_once '../includes/admin_check.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {

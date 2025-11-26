@@ -9,7 +9,7 @@ class FlutterwaveAPI {
         $this->secret_key = $secret_key;
     }
 
-    private function send_request($endpoint, $method = 'POST', $data = []) {
+    private function send_request($endpoint, $method = 'GET', $data = []) {
         $ch = curl_init();
         $url = $this->base_url . $endpoint;
 
@@ -51,16 +51,19 @@ class FlutterwaveAPI {
         return $decoded_response;
     }
 
-    public function create_virtual_account($email, $bvn, $firstname, $lastname, $tx_ref) {
-        $endpoint = '/virtual-account-numbers';
+    public function generate_virtual_account($email, $first_name, $last_name, $phone_number, $tx_ref) {
         $data = [
             'email' => $email,
-            'bvn' => $bvn,
-            'firstname' => $firstname,
-            'lastname' => $lastname,
+            'firstname' => $first_name,
+            'lastname' => $last_name,
+            'phonenumber' => $phone_number,
             'tx_ref' => $tx_ref,
             'is_permanent' => true,
         ];
-        return $this->send_request($endpoint, 'POST', $data);
+        return $this->send_request('/virtual-account-numbers', 'POST', $data);
+    }
+
+    public function verify_transaction($transaction_id) {
+        return $this->send_request("/transactions/{$transaction_id}/verify");
     }
 }
