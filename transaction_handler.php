@@ -401,4 +401,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
     }
+
+    if ($_POST['action'] === 'pay_invoice') {
+        $invoice_id = (int)$_POST['invoice_id'];
+
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Get invoice details and lock the row
+            $stmt = $pdo->prepare("SELECT * FROM invoices WHERE id = ? AND user_id = ? AND status = 'unpaid' FOR UPDATE");
+            $stmt->execute([$invoice_id, $user_id]);
+            $invoice = $stmt->fetch();
+
+            if (!$invoice) {
+                throw new Exception("Invoice not found, is already paid, or you do not have permission to pay it.");
+            }
+            $amount = (float)$invoice['total_amount'];
+
+            // 2. Check wallet balance
+            $wallet_stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? AND currency = 'NGN' FOR UPDATE");
+            $wallet_stmt->execute([$user_id]);
+            $balance = $wallet_stmt->fetchColumn();
+
+            if ($balance < $amount) {
+                throw new Exception("Insufficient funds in your NGN wallet.");
+            }
+
+            // 3. Debit wallet
+            $debit_stmt = $pdo->prepare("UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND currency = 'NGN'");
+            $debit_stmt->execute([$amount, $user_id]);
+
+            // 4. Update invoice status
+            $inv_update_stmt = $pdo->prepare("UPDATE invoices SET status = 'paid' WHERE id = ?");
+            $inv_update_stmt->execute([$invoice_id]);
+
+            // 5. Log transaction
+            $desc = "Payment for Invoice #{$invoice_id}";
+            $log_stmt = $pdo->prepare("INSERT INTO transactions (user_id, type, amount, currency, status, description) VALUES (?, ?, ?, 'NGN', 'completed', ?)");
+            $log_stmt->execute([$user_id, 'invoice_payment', $amount, $desc]);
+
+            $pdo->commit();
+            set_flash_message('success', 'Invoice paid successfully.');
+            header("Location: view_invoice.php?id={$invoice_id}");
+            exit();
+
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            set_flash_message('error', 'Payment failed: ' . $e->getMessage());
+            header("Location: view_invoice.php?id={$invoice_id}");
+            exit();
+        }
+    }
 }

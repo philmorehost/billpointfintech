@@ -26,6 +26,7 @@ $balance = $stmt->fetchColumn();
 
         <!-- Services Grid -->
         <div class="services-grid">
+            <a href="invoices.php" class="service-item" style="text-decoration: none; color: inherit;">Invoicing</a>
             <a href="savings.php" class="service-item" style="text-decoration: none; color: inherit;">Savings</a>
             <a href="exchange.php" class="service-item" style="text-decoration: none; color: inherit;">Exchange</a>
             <a href="global_transfer.php" class="service-item" style="text-decoration: none; color: inherit;">Global Transfer</a>

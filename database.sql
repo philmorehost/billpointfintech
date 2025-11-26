@@ -204,3 +204,50 @@ CREATE TABLE `savings_transactions` (
   FOREIGN KEY (`savings_goal_id`) REFERENCES `savings_goals` (`id`) ON DELETE CASCADE,
   FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Estimates & Invoices Tables
+CREATE TABLE `estimates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `customer_name` varchar(255) NOT NULL,
+  `customer_email` varchar(255) NOT NULL,
+  `total_amount` decimal(20,4) NOT NULL,
+  `status` enum('draft','sent','accepted','rejected') NOT NULL DEFAULT 'draft',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `estimate_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `estimate_id` int(11) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit_price` decimal(20,4) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`estimate_id`) REFERENCES `estimates` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `invoices` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `estimate_id` int(11) DEFAULT NULL,
+  `customer_name` varchar(255) NOT NULL,
+  `customer_email` varchar(255) NOT NULL,
+  `total_amount` decimal(20,4) NOT NULL,
+  `status` enum('unpaid','paid','cancelled') NOT NULL DEFAULT 'unpaid',
+  `due_date` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `invoice_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `invoice_id` int(11) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit_price` decimal(20,4) NOT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -97,36 +97,36 @@ $csrf_token = generate_csrf_token();
 
             <div class="form-group">
                 <label for="datagifting_api_key">Datagifting API Key</label>
-                <input type="text" id="datagifting_api_key" name="datagifting_api_key" value="<?php echo htmlspecialchars((string)$api_key); ?>">
+                <input type="password" id="datagifting_api_key" name="datagifting_api_key" value="<?php echo htmlspecialchars((string)$api_key); ?>">
             </div>
 
             <div class="form-group">
                 <label for="paystack_secret_key">Paystack Secret Key</label>
-                <input type="text" id="paystack_secret_key" name="paystack_secret_key" value="<?php echo htmlspecialchars((string)$paystack_key); ?>">
+                <input type="password" id="paystack_secret_key" name="paystack_secret_key" value="<?php echo htmlspecialchars((string)$paystack_key); ?>">
             </div>
 
             <hr>
 
             <div class="form-group">
                 <label for="monnify_api_key">Monnify API Key</label>
-                <input type="text" id="monnify_api_key" name="monnify_api_key" value="<?php echo htmlspecialchars((string)$monnify_api_key); ?>">
+                <input type="password" id="monnify_api_key" name="monnify_api_key" value="<?php echo htmlspecialchars((string)$monnify_api_key); ?>">
             </div>
 
              <div class="form-group">
                 <label for="monnify_secret_key">Monnify Secret Key</label>
-                <input type="text" id="monnify_secret_key" name="monnify_secret_key" value="<?php echo htmlspecialchars((string)$monnify_secret_key); ?>">
+                <input type="password" id="monnify_secret_key" name="monnify_secret_key" value="<?php echo htmlspecialchars((string)$monnify_secret_key); ?>">
             </div>
 
             <hr>
 
             <div class="form-group">
                 <label for="juicyway_api_key">JuicyWay API Key</label>
-                <input type="text" id="juicyway_api_key" name="juicyway_api_key" value="<?php echo htmlspecialchars((string)$juicyway_api_key); ?>">
+                <input type="password" id="juicyway_api_key" name="juicyway_api_key" value="<?php echo htmlspecialchars((string)$juicyway_api_key); ?>">
             </div>
 
              <div class="form-group">
                 <label for="juicyway_secret_key">JuicyWay Secret Key</label>
-                <input type="text" id="juicyway_secret_key" name="juicyway_secret_key" value="<?php echo htmlspecialchars((string)$juicyway_secret_key); ?>">
+                <input type="password" id="juicyway_secret_key" name="juicyway_secret_key" value="<?php echo htmlspecialchars((string)$juicyway_secret_key); ?>">
             </div>
 
             <button type="submit" class="btn">Save All Settings</button>
