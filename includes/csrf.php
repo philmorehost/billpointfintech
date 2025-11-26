@@ -13,3 +13,8 @@ function validate_csrf_token() {
     }
     return true;
 }
+
+function generate_csrf_token_input() {
+    $token = generate_csrf_token();
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars($token) . '">';
+}
