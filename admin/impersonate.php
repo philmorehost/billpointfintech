@@ -1,66 +1,37 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
-}
 require_once '../includes/bootstrap.php';
+require_once '../includes/auth_check.php';
+require_once '../includes/admin_check.php';
 
-// Log an action to the audit log
-function log_admin_action($pdo, $admin_id, $action, $target_user_id = null, $details = '') {
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $stmt = $pdo->prepare("INSERT INTO audit_log (admin_id, action, target_user_id, details, ip_address) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$admin_id, $action, $target_user_id, $details, $ip]);
-}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+    if (!validate_csrf_token()) {
+        set_flash_message('error', 'CSRF validation failed.');
+        header('Location: users.php');
+        exit();
+    }
+    $user_id_to_impersonate = (int)$_POST['user_id'];
 
-// --- Start Impersonation ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id_to_impersonate'])) {
-    if (validate_csrf_token()) {
-        $user_id_to_impersonate = (int)$_POST['user_id_to_impersonate'];
+    $stmt = $pdo->prepare("SELECT id, role, full_name FROM users WHERE id = ?");
+    $stmt->execute([$user_id_to_impersonate]);
+    $user = $stmt->fetch();
 
-        // Ensure we're not already impersonating
-        if (!isset($_SESSION['original_admin_id'])) {
-            // Get user details to confirm they are a regular user
-            $stmt = $pdo->prepare("SELECT id, role FROM users WHERE id = ? AND role = 'user'");
-            $stmt->execute([$user_id_to_impersonate]);
-            $user = $stmt->fetch();
+    if ($user) {
+        // Log the impersonation action
+        $log_stmt = $pdo->prepare("INSERT INTO audit_log (admin_id, action, target_user_id, ip_address) VALUES (?, 'impersonate_start', ?, ?)");
+        $log_stmt->execute([$_SESSION['admin_id'], $user_id_to_impersonate, $_SERVER['REMOTE_ADDR']]);
 
-            if ($user) {
-                // Log the action
-                log_admin_action($pdo, $_SESSION['user_id'], 'impersonate_start', $user_id_to_impersonate);
+        // Store original admin ID and role, then switch to the user's session
+        $_SESSION['original_admin_id'] = $_SESSION['admin_id'];
+        $_SESSION['original_admin_role'] = $_SESSION['admin_role'];
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_role'] = 'user';
 
-                // Store original admin session
-                $_SESSION['original_admin_id'] = $_SESSION['user_id'];
-                $_SESSION['original_admin_role'] = $_SESSION['user_role'];
-
-                // Switch to the new user's session
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_role'] = $user['role'];
-
-                header('Location: ../dashboard.php');
-                exit();
-            }
-        }
+        set_flash_message('success', 'You are now impersonating ' . htmlspecialchars($user['full_name']));
+        header('Location: ../dashboard.php');
+        exit();
     }
 }
 
-// --- Stop Impersonation ---
-if (isset($_GET['action']) && $_GET['action'] === 'stop') {
-    if (isset($_SESSION['original_admin_id'])) {
-
-        log_admin_action($pdo, $_SESSION['original_admin_id'], 'impersonate_stop', $_SESSION['user_id']);
-
-        // Restore original admin session
-        $_SESSION['user_id'] = $_SESSION['original_admin_id'];
-        $_SESSION['user_role'] = $_SESSION['original_admin_role'];
-
-        unset($_SESSION['original_admin_id']);
-        unset($_SESSION['original_admin_role']);
-    }
-    header('Location: ../admin/index.php');
-    exit();
-}
-
-// Default redirect if accessed directly
+set_flash_message('error', 'Invalid user selected for impersonation.');
 header('Location: users.php');
 exit();

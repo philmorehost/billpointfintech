@@ -75,4 +75,31 @@ class JuicyWayAPI {
         // e.g., ['beneficiary' => [...], 'amount' => 100, 'currency' => 'USD', ...]
         return $this->send_request('/transfers', 'POST', $data);
     }
+
+    public function create_exchange_rate($pair, $rate) {
+        $data = [
+            'pair' => $pair,
+            'rate' => $rate,
+        ];
+        return $this->send_request('/exchange/rates', 'POST', $data);
+    }
+
+    public function delete_exchange_rate($rate_id) {
+        return $this->send_request('/exchange/rates/' . $rate_id, 'DELETE');
+    }
+
+    public function fetch_exchange_rate($rate_id) {
+        return $this->send_request('/exchange/rates/' . $rate_id);
+    }
+
+    public function list_exchange_rates() {
+        return $this->send_request('/exchange/rates');
+    }
+
+    public function update_exchange_rate($rate_id, $rate) {
+        $data = [
+            'rate' => $rate,
+        ];
+        return $this->send_request('/exchange/rates/' . $rate_id, 'PATCH', $data);
+    }
 }

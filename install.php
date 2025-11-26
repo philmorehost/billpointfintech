@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $hashed_pin = password_hash($pin, PASSWORD_DEFAULT);
 
-            $stmt = $pdo->prepare("INSERT INTO users (full_name, email, phone, password, pin, role) VALUES (?, ?, ?, ?, ?, 'admin')");
+            $stmt = $pdo->prepare("INSERT INTO admins (full_name, email, phone, password, pin) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$name, $email, $phone, $hashed_password, $hashed_pin]);
 
             $config_template = file_get_contents('includes/config.php');

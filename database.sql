@@ -1,5 +1,18 @@
 -- Billpoint SQL Schema
 
+-- Admins Table
+CREATE TABLE `admins` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `full_name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `pin` varchar(255) NOT NULL, -- This will be a hashed value
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Users Table
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -8,7 +21,6 @@ CREATE TABLE `users` (
   `phone` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `pin` varchar(255) NOT NULL, -- This will be a hashed value
-  `role` enum('user','admin') NOT NULL DEFAULT 'user',
   `account_number` varchar(255) DEFAULT NULL,
   `bank_name` varchar(255) DEFAULT NULL,
   `bank_code` varchar(255) DEFAULT NULL,
@@ -254,3 +266,25 @@ CREATE TABLE `invoice_items` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `services` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Populate Services Table
+INSERT INTO `services` (`name`, `url`, `icon`, `is_active`) VALUES
+('Airtime', 'airtime.php', NULL, 1),
+('Data', 'data.php', NULL, 1),
+('Cable TV', 'cable.php', NULL, 1),
+('Electricity', 'electricity.php', NULL, 1),
+('P2P Transfer', 'p2p_transfer.php', NULL, 1),
+('Savings', 'savings.php', NULL, 1),
+('Loan', 'loan.php', NULL, 0),
+('Crypto', 'crypto.php', NULL, 0),
+('Exam PINs', 'exam.php', NULL, 1),
+('Recharge Card', 'recharge_card.php', NULL, 0),
+('Bulk SMS', 'bulk_sms.php', NULL, 0);

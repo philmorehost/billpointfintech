@@ -26,18 +26,14 @@ $balance = $stmt->fetchColumn();
 
         <!-- Services Grid -->
         <div class="services-grid">
-            <a href="invoices.php" class="service-item" style="text-decoration: none; color: inherit;">Invoicing</a>
-            <a href="savings.php" class="service-item" style="text-decoration: none; color: inherit;">Savings</a>
-            <a href="exchange.php" class="service-item" style="text-decoration: none; color: inherit;">Exchange</a>
-            <a href="global_transfer.php" class="service-item" style="text-decoration: none; color: inherit;">Global Transfer</a>
-            <a href="p2p_transfer.php" class="service-item" style="text-decoration: none; color: inherit;">P2P Transfer</a>
-            <a href="airtime.php" class="service-item" style="text-decoration: none; color: inherit;">Airtime</a>
-            <a href="data.php" class="service-item" style="text-decoration: none; color: inherit;">Data</a>
-            <a href="cable.php" class="service-item" style="text-decoration: none; color: inherit;">Cable TV</a>
-            <a href="electricity.php" class="service-item" style="text-decoration: none; color: inherit;">Electricity</a>
-            <a href="exam.php" class="service-item" style="text-decoration: none; color: inherit;">Exam PINs</a>
-            <div class="service-item">Loan</div>
-            <div class="service-item">Crypto</div>
+            <?php
+            $services_stmt = $pdo->query("SELECT * FROM services WHERE is_active = 1 ORDER BY name");
+            $services = $services_stmt->fetchAll();
+            $displayed_services = array_slice($services, 0, 11);
+            foreach ($displayed_services as $service) {
+                echo '<a href="' . htmlspecialchars($service['url']) . '" class="service-item" style="text-decoration: none; color: inherit;">' . htmlspecialchars($service['name']) . '</a>';
+            }
+            ?>
             <div class="service-item more-btn" onclick="openModal()">More</div>
         </div>
     </div>
@@ -50,17 +46,9 @@ $balance = $stmt->fetchColumn();
             <span class="close" onclick="closeModal()">&times;</span>
             <h2>All Services</h2>
             <div class="services-grid">
-                <div class="service-item">Airtime</div>
-                <div class="service-item">Data</div>
-                <div class="service-item">Cable TV</div>
-                <div class="service-item">Electricity</div>
-                <div class="service-item">Transfer</div>
-                <div class="service-item">Savings</div>
-                <div class="service-item">Loan</div>
-                <div class="service-item">Crypto</div>
-                <div class="service-item">Exam PINs</div>
-                <div class="service-item">Recharge Card</div>
-                <div class="service-item">Bulk SMS</div>
+                <?php foreach ($services as $service): ?>
+                    <a href="<?php echo htmlspecialchars($service['url']); ?>" class="service-item" style="text-decoration: none; color: inherit;"><?php echo htmlspecialchars($service['name']); ?></a>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>

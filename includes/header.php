@@ -27,3 +27,9 @@
         </nav>
     </header>
     <main class="main-content">
+<?php if (isset($_SESSION['original_admin_id'])): ?>
+    <div class="impersonation-banner">
+        You are currently impersonating a user.
+        <a href="stop_impersonating.php" class="btn btn-sm">Stop Impersonating</a>
+    </div>
+<?php endif; ?>
