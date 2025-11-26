@@ -16,6 +16,9 @@ CREATE TABLE `users` (
   `nin` varchar(11) DEFAULT NULL,
   `kyc_level` int(11) NOT NULL DEFAULT '0',
   `kyc_verified_at` timestamp NULL DEFAULT NULL,
+  `virtual_account_ref` varchar(255) DEFAULT NULL,
+  `virtual_bank_name` varchar(255) DEFAULT NULL,
+  `virtual_account_number` varchar(20) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
