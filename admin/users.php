@@ -1,35 +1,30 @@
 <?php
-$page_title = 'Admin - User Management';
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
-}
 require_once '../includes/bootstrap.php';
+require_once '../includes/auth_check.php';
+require_once '../includes/admin_check.php';
 
-$users = $pdo->query("SELECT id, full_name, email, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC")->fetchAll();
-$csrf_token = generate_csrf_token();
+$stmt = $pdo->query("SELECT id, full_name, email, phone, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC");
+$users = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title><?php echo $page_title; ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-    <h1>Admin - User Management</h1>
-    <a href="index.php">Dashboard</a> | <a href="../logout.php">Logout</a>
-
-    <div class="admin-container">
-        <h2>All Users</h2>
-        <table class="support-table">
+    <div class="container">
+        <h2>Manage Users</h2>
+        <table>
             <thead>
                 <tr>
                     <th>Name</th>
                     <th>Email</th>
+                    <th>Phone</th>
                     <th>Registered</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -37,11 +32,12 @@ $csrf_token = generate_csrf_token();
                 <tr>
                     <td><?php echo htmlspecialchars($user['full_name']); ?></td>
                     <td><?php echo htmlspecialchars($user['email']); ?></td>
-                    <td><?php echo date('M d, Y', strtotime($user['created_at'])); ?></td>
+                    <td><?php echo htmlspecialchars($user['phone']); ?></td>
+                    <td><?php echo $user['created_at']; ?></td>
                     <td>
-                        <form action="impersonate.php" method="POST">
-                            <input type="hidden" name="user_id_to_impersonate" value="<?php echo $user['id']; ?>">
-                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                        <form action="impersonate.php" method="post" style="display:inline;">
+                            <?php generate_csrf_token(); ?>
+                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
                             <button type="submit" class="btn btn-sm">Impersonate</button>
                         </form>
                     </td>

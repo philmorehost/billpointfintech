@@ -1,82 +1,112 @@
 <?php
-$page_title = 'Admin - P2P Transfers';
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../login.php');
+require_once '../includes/bootstrap.php';
+require_once '../includes/auth_check.php';
+require_once '../includes/admin_check.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if (!validate_csrf_token()) {
+        set_flash_message('error', 'CSRF validation failed.');
+        header('Location: p2p_transfers.php');
+        exit();
+    }
+    $transfer_id = (int)$_POST['transfer_id'];
+    $action = $_POST['action'];
+
+    if ($action === 'approve') {
+        try {
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare("SELECT * FROM p2p_transfers WHERE id = ? AND status = 'pending' FOR UPDATE");
+            $stmt->execute([$transfer_id]);
+            $transfer = $stmt->fetch();
+
+            if ($transfer) {
+                // Debit sender
+                $debit_stmt = $pdo->prepare("UPDATE wallets SET balance = balance - ? WHERE user_id = ? AND currency = 'NGN'");
+                $debit_stmt->execute([$transfer['amount'], $transfer['sender_id']]);
+
+                // Credit recipient
+                $credit_stmt = $pdo->prepare("UPDATE wallets SET balance = balance + ? WHERE user_id = ? AND currency = 'NGN'");
+                $credit_stmt->execute([$transfer['amount'], $transfer['recipient_id']]);
+
+                // Update transfer status
+                $update_stmt = $pdo->prepare("UPDATE p2p_transfers SET status = 'approved' WHERE id = ?");
+                $update_stmt->execute([$transfer_id]);
+
+                // Log transactions
+                $log_stmt = $pdo->prepare("INSERT INTO transactions (user_id, type, amount, currency, status, description) VALUES (?, ?, ?, 'NGN', 'completed', ?)");
+                $log_stmt->execute([$transfer['sender_id'], 'p2p_debit', $transfer['amount'], 'P2P Transfer to ' . $transfer['recipient_id']]);
+                $log_stmt->execute([$transfer['recipient_id'], 'p2p_credit', $transfer['amount'], 'P2P Transfer from ' . $transfer['sender_id']]);
+
+                $pdo->commit();
+                set_flash_message('success', 'Transfer approved.');
+            }
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            set_flash_message('error', 'Failed to approve transfer: ' . $e->getMessage());
+        }
+    } elseif ($action === 'reject') {
+        $stmt = $pdo->prepare("UPDATE p2p_transfers SET status = 'rejected' WHERE id = ?");
+        $stmt->execute([$transfer_id]);
+        set_flash_message('success', 'Transfer rejected.');
+    }
+    header("Location: p2p_transfers.php");
     exit();
 }
-require_once '../includes/bootstrap.php';
-$csrf_token = generate_csrf_token();
 
-// Fetch pending transfers with user details
 $stmt = $pdo->query("
-    SELECT
-        p.*,
-        sender.full_name as sender_name,
-        recipient.full_name as recipient_name
-    FROM p2p_transfers p
-    JOIN users sender ON p.sender_id = sender.id
-    JOIN users recipient ON p.recipient_id = recipient.id
-    WHERE p.status = 'pending'
-    ORDER BY p.created_at DESC
+    SELECT t.id, s.full_name AS sender, r.full_name AS recipient, t.amount, t.status, t.created_at
+    FROM p2p_transfers t
+    JOIN users s ON t.sender_id = s.id
+    JOIN users r ON t.recipient_id = r.id
+    ORDER BY t.created_at DESC
 ");
-$pending_transfers = $stmt->fetchAll();
+$transfers = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title; ?></title>
+    <title>P2P Transfers - Admin</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-    <h1>Admin - P2P Transfer Requests</h1>
-    <a href="index.php">Dashboard</a> | <a href="../logout.php">Logout</a>
-
-    <div class="admin-container">
-        <h2>Pending Transfers</h2>
-        <?php display_flash_message(); ?>
-
-        <?php if (empty($pending_transfers)): ?>
-            <p>There are no pending P2P transfers.</p>
-        <?php else: ?>
-            <table class="support-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Sender</th>
-                        <th>Recipient</th>
-                        <th>Amount (NGN)</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($pending_transfers as $transfer): ?>
-                        <tr>
-                            <td><?php echo date('M d, Y H:i', strtotime($transfer['created_at'])); ?></td>
-                            <td><?php echo htmlspecialchars($transfer['sender_name']); ?></td>
-                            <td><?php echo htmlspecialchars($transfer['recipient_name']); ?></td>
-                            <td><?php echo number_format($transfer['amount'], 2); ?></td>
-                            <td>
-                                <form action="p2p_handler.php" method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="approve_p2p">
-                                    <input type="hidden" name="transfer_id" value="<?php echo $transfer['id']; ?>">
-                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                </form>
-                                <form action="p2p_handler.php" method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="reject_p2p">
-                                    <input type="hidden" name="transfer_id" value="<?php echo $transfer['id']; ?>">
-                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
+    <div class="container">
+        <h2>P2P Transfers</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sender</th>
+                    <th>Recipient</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($transfers as $transfer): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($transfer['sender']); ?></td>
+                    <td><?php echo htmlspecialchars($transfer['recipient']); ?></td>
+                    <td><?php echo number_format($transfer['amount'], 2); ?></td>
+                    <td><?php echo htmlspecialchars($transfer['status']); ?></td>
+                    <td><?php echo $transfer['created_at']; ?></td>
+                    <td>
+                        <?php if ($transfer['status'] === 'pending'): ?>
+                        <form action="p2p_transfers.php" method="post" style="display:inline;">
+                            <?php generate_csrf_token(); ?>
+                            <input type="hidden" name="transfer_id" value="<?php echo $transfer['id']; ?>">
+                            <button type="submit" name="action" value="approve" class="btn btn-sm">Approve</button>
+                            <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>

@@ -117,13 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_role'] = $user['role'];
-
-                if ($user['role'] === 'admin') {
-                    header('Location: admin/index.php');
-                } else {
-                    header('Location: dashboard.php');
-                }
+                $_SESSION['user_role'] = 'user';
+                header('Location: dashboard.php');
             } else {
                 set_flash_message('error', 'Invalid credentials.');
                 header('Location: login.php');
