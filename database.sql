@@ -1,26 +1,26 @@
 -- Billpoint SQL Schema
 
 -- Admins Table
-CREATE TABLE `admins` (
+CREATE TABLE IF NOT EXISTS `admins` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `full_name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `phone` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `pin` varchar(255) NOT NULL, -- This will be a hashed value
+  `pin` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Users Table
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `full_name` varchar(255) NOT NULL,
   `email` varchar(255) NOT NULL,
   `phone` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `pin` varchar(255) NOT NULL, -- This will be a hashed value
+  `pin` varchar(255) NOT NULL,
   `account_number` varchar(255) DEFAULT NULL,
   `bank_name` varchar(255) DEFAULT NULL,
   `bank_code` varchar(255) DEFAULT NULL,
@@ -36,6 +36,7 @@ CREATE TABLE `users` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- The rest of the schema from the previous read_file call...
 -- Wallets Table
 CREATE TABLE `wallets` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -154,7 +155,7 @@ CREATE TABLE `ticket_messages` (
 -- P2P Transfers Table
 CREATE TABLE `p2p_transfers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `sender_id` int(11) NOT NULL,
+  `sender_.id` int(11) NOT NULL,
   `recipient_id` int(11) NOT NULL,
   `amount` decimal(20,4) NOT NULL,
   `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',

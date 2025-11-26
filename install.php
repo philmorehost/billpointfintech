@@ -86,6 +86,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt = $pdo->prepare("INSERT INTO admins (full_name, email, phone, password, pin) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$name, $email, $phone, $hashed_password, $hashed_pin]);
 
+            // Also insert a default setting for the admin contact phone
+            $setting_stmt = $pdo->prepare("INSERT INTO settings (name, value) VALUES ('admin_contact_phone', ?) ON DUPLICATE KEY UPDATE value = ?");
+            $setting_stmt->execute([$phone, $phone]);
+
             $config_template = file_get_contents('includes/config.php');
             $config_content = str_replace(
                 ['{{DB_HOST}}', '{{DB_NAME}}', '{{DB_USER}}', '{{DB_PASS}}', '{{ADMIN_PHONE}}'],
