@@ -3,6 +3,16 @@
 require_once 'includes/bootstrap.php';
 require_once 'core/flutterwave_api.php';
 
+// Verify the webhook signature
+$secret_hash = $config['settings']['flutterwave_secret_hash'] ?? '';
+$signature = $_SERVER['HTTP_VERIF_HASH'] ?? '';
+
+if (!$signature || ($signature !== $secret_hash)) {
+    // This request isn't from Flutterwave. Discard.
+    http_response_code(401);
+    exit();
+}
+
 // Retrieve the request's body and parse it as JSON
 $json = file_get_contents('php://input');
 $event = json_decode($json);

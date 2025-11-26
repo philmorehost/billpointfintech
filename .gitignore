@@ -1,0 +1,10 @@
+# Ignore server logs
+php_server.log
+
+# Ignore vendor directories
+vendor/
+node_modules/
+
+# Ignore sensitive files
+.env
+installed.lock

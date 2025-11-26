@@ -1,67 +1,116 @@
 <?php
-require_once 'includes/bootstrap.php';
-require_once 'includes/auth_check.php';
+$page_title = 'Dashboard';
+require_once 'includes/header.php';
 
+// Fetch all wallet balances for the user
 $user_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT balance FROM wallets WHERE user_id = ? AND currency = 'NGN'");
+$stmt = $pdo->prepare("SELECT currency, balance, ledger_balance FROM wallets WHERE user_id = ?");
 $stmt->execute([$user_id]);
-$balance = $stmt->fetchColumn();
+$wallets = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// Default to NGN if available, otherwise pick the first wallet
+$primary_currency = 'NGN';
+$primary_balance = $wallets[$primary_currency]['balance'] ?? 0;
+$primary_ledger_balance = $wallets[$primary_currency]['ledger_balance'] ?? 0;
+
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Billpoint</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-    <div class="dashboard-container">
+
+<div class="dashboard-grid">
+    <div class="dashboard-main">
         <!-- Balance Card -->
-        <div class="balance-card">
-            <h3>NGN Balance</h3>
-            <p>₦<?php echo number_format($balance, 2); ?></p>
-            <a href="fund_wallet.php" class="btn btn-sm">Fund Wallet</a>
+        <div class="balance-card-new">
+            <p>Available balance</p>
+            <h2><?php echo htmlspecialchars($primary_currency); ?> <?php echo number_format($primary_balance, 2); ?></h2>
+            <p>Ledger balance: <?php echo number_format($primary_ledger_balance, 2); ?></p>
         </div>
 
-        <!-- Services Grid -->
-        <div class="services-grid">
-            <?php
-            $services_stmt = $pdo->query("SELECT * FROM services WHERE is_active = 1 ORDER BY name");
-            $services = $services_stmt->fetchAll();
-            $displayed_services = array_slice($services, 0, 11);
-            foreach ($displayed_services as $service) {
-                echo '<a href="' . htmlspecialchars($service['url']) . '" class="service-item" style="text-decoration: none; color: inherit;">' . htmlspecialchars($service['name']) . '</a>';
-            }
-            ?>
-            <div class="service-item more-btn" onclick="openModal()">More</div>
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="fund_wallet.php" class="action-btn">
+                <svg><!-- deposit icon --></svg>
+                <span>Deposit</span>
+            </a>
+            <a href="p2p_transfer.php" class="action-btn">
+                <svg><!-- transfer icon --></svg>
+                <span>Transfer</span>
+            </a>
+            <a href="exchange.php" class="action-btn">
+                <svg><!-- convert icon --></svg>
+                <span>Convert</span>
+            </a>
+            <a href="support.php" class="action-btn">
+                <svg><!-- request icon --></svg>
+                <span>Request</span>
+            </a>
         </div>
-    </div>
 
-    <?php include 'includes/footer_nav.php'; ?>
-
-    <!-- "More" Services Modal -->
-    <div id="more-services-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2>All Services</h2>
-            <div class="services-grid">
-                <?php foreach ($services as $service): ?>
-                    <a href="<?php echo htmlspecialchars($service['url']); ?>" class="service-item" style="text-decoration: none; color: inherit;"><?php echo htmlspecialchars($service['name']); ?></a>
+        <!-- Balances / Transactions List -->
+        <div class="transactions-card">
+            <div class="tabs">
+                <div class="tab active" data-target="balances-content">Balances</div>
+                <div class="tab" data-target="transactions-content">Transactions</div>
+            </div>
+            <div id="balances-content" class="tab-content">
+                <?php foreach ($wallets as $currency => $wallet): ?>
+                <div class="balance-list-item">
+                    <img src="assets/img/flags/<?php echo strtolower($currency); ?>.png" alt="<?php echo $currency; ?>" class="currency-icon">
+                    <div class="currency-details">
+                        <p class="currency-name"><?php echo htmlspecialchars($currency); ?></p>
+                        <p class="currency-fullname">
+                            <?php
+                                $currency_map = ['NGN' => 'Nigerian Naira', 'USD' => 'US Dollar', 'CAD' => 'Canadian Dollar', 'USDT' => 'Tether (USDT)', 'USDC' => 'USD Coin'];
+                                echo $currency_map[$currency] ?? '';
+                            ?>
+                        </p>
+                    </div>
+                    <div class="balance-amounts">
+                        <p class="primary-balance"><?php echo number_format($wallet['balance'], 2); ?></p>
+                        <p class="secondary-balance">Ledger: <?php echo number_format($wallet['ledger_balance'], 2); ?></p>
+                    </div>
+                </div>
                 <?php endforeach; ?>
+            </div>
+            <div id="transactions-content" class="tab-content" style="display: none;">
+                <!-- Transaction history would be loaded here, possibly via AJAX -->
+                <p>Transaction history coming soon.</p>
             </div>
         </div>
     </div>
 
-    <script>
-        const modal = document.getElementById('more-services-modal');
-        function openModal() { modal.style.display = 'block'; }
-        function closeModal() { modal.style.display = 'none'; }
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
-        }
-    </script>
-</body>
-</html>
+    <div class="dashboard-sidebar">
+        <!-- Send Money Form -->
+        <div class="send-money-card">
+            <h3>Send money</h3>
+            <form action="p2p_transfer.php" method="POST">
+                <?php echo generate_csrf_token_input(); ?>
+                <div class="form-group">
+                    <label for="send-amount">You send</label>
+                    <div class="input-group">
+                        <input type="text" id="send-amount" name="amount" placeholder="0.00">
+                        <select class="currency-selector" name="currency">
+                            <option>USD</option>
+                            <option selected>NGN</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="receive-amount">They receive</label>
+                    <div class="input-group">
+                        <input type="text" id="receive-amount" placeholder="0.00" disabled>
+                         <select class="currency-selector">
+                            <option>CAD</option>
+                            <option selected>NGN</option>
+                        </select>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="recipient">Recipient</label>
+                    <input type="text" id="recipient" name="recipient" placeholder="Enter recipient's username or email">
+                </div>
+                <button type="submit" class="btn-primary">Send money</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<?php require_once 'includes/footer.php'; ?>

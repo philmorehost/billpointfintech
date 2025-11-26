@@ -1,107 +1,57 @@
 <?php
-require_once 'includes/bootstrap.php';
-require_once 'includes/auth_check.php';
+$page_title = 'View Ticket';
+require_once 'includes/header.php';
 
 $ticket_id = $_GET['id'] ?? null;
 if (!$ticket_id) {
-    header('Location: support.php');
+    header("Location: support.php");
     exit();
 }
 
-// Fetch ticket details, ensuring it belongs to the logged-in user
-$stmt = $pdo->prepare("SELECT * FROM tickets WHERE id = ? AND user_id = ?");
-$stmt->execute([$ticket_id, $_SESSION['user_id']]);
+$user_id = $_SESSION['user_id'];
+$stmt = $pdo->prepare("SELECT * FROM support_tickets WHERE id = ? AND user_id = ?");
+$stmt->execute([$ticket_id, $user_id]);
 $ticket = $stmt->fetch();
 
 if (!$ticket) {
-    set_flash_message('error', 'Ticket not found or you do not have permission to view it.');
-    header('Location: support.php');
+    // Ticket not found or doesn't belong to the user
+    header("Location: support.php");
     exit();
 }
 
-// Fetch all messages for this ticket
-$msg_stmt = $pdo->prepare("SELECT m.*, u.full_name FROM ticket_messages m JOIN users u ON m.sender_id = u.id WHERE m.ticket_id = ? ORDER BY m.created_at ASC");
+// Fetch messages
+$msg_stmt = $pdo->prepare("SELECT * FROM ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC");
 $msg_stmt->execute([$ticket_id]);
 $messages = $msg_stmt->fetchAll();
-
-$csrf_token = generate_csrf_token();
 ?>
 
-<?php include 'includes/header.php'; ?>
+<div class="view-ticket-container" style="background: #fff; padding: 2rem; border-radius: 1rem;">
+    <h2><?php echo htmlspecialchars($ticket['subject']); ?></h2>
+    <p>Status: <strong><?php echo ucfirst($ticket['status']); ?></strong></p>
 
-<div class="container">
-    <div class="page-header">
-        <h1>Ticket: <?php echo htmlspecialchars($ticket['subject']); ?></h1>
-        <p>Status: <span class="status-<?php echo strtolower($ticket['status']); ?>"><?php echo ucfirst($ticket['status']); ?></span></p>
+    <div class="chat-box" style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; height: 400px; overflow-y: scroll; margin-bottom: 1.5rem;">
+        <?php foreach ($messages as $message): ?>
+            <div class="message <?php echo $message['is_admin_reply'] ? 'admin-reply' : 'user-message'; ?>" style="margin-bottom: 1rem;">
+                <p style="background: <?php echo $message['is_admin_reply'] ? '#f1f5f9' : '#e0e7ff'; ?>; padding: 0.75rem; border-radius: 0.5rem; display: inline-block;">
+                    <?php echo nl2br(htmlspecialchars($message['message'])); ?>
+                </p>
+                <small style="display: block; color: #6b7280; margin-top: 0.25rem;"><?php echo date('M d, H:i', strtotime($message['created_at'])); ?></small>
+            </div>
+        <?php endforeach; ?>
     </div>
 
-    <div class="chat-container">
-        <div id="chat-box" class="chat-box">
-            <!-- Messages will be loaded here by AJAX -->
-            <?php foreach ($messages as $message): ?>
-                <div class="chat-message <?php echo $message['is_admin_reply'] ? 'admin' : 'user'; ?>">
-                    <p class="message-content"><?php echo nl2br(htmlspecialchars($message['message'])); ?></p>
-                    <span class="message-meta">
-                        <?php echo $message['is_admin_reply'] ? 'Admin' : 'You'; ?> on <?php echo date('M d, H:i', strtotime($message['created_at'])); ?>
-                    </span>
-                </div>
-            <?php endforeach; ?>
+    <?php if ($ticket['status'] !== 'closed'): ?>
+    <form action="support_handler.php" method="POST">
+        <?php echo generate_csrf_token_input(); ?>
+        <input type="hidden" name="action" value="reply_ticket">
+        <input type="hidden" name="ticket_id" value="<?php echo $ticket_id; ?>">
+        <div class="form-group">
+            <label for="message">Your Reply</label>
+            <textarea id="message" name="message" rows="5" required></textarea>
         </div>
-
-        <div class="chat-reply">
-            <form id="reply-form">
-                <input type="hidden" name="action" value="add_reply">
-                <input type="hidden" name="ticket_id" value="<?php echo $ticket_id; ?>">
-                <input type="hidden" id="csrf_token" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                <div class="form-group">
-                    <textarea id="reply-message" name="message" rows="3" placeholder="Type your reply here..." required></textarea>
-                </div>
-                <button type="submit" class="btn">Send Reply</button>
-            </form>
-        </div>
-    </div>
+        <button type="submit" class="btn-primary">Send Reply</button>
+    </form>
+    <?php endif; ?>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const chatBox = document.getElementById('chat-box');
-    const replyForm = document.getElementById('reply-form');
-    const replyMessageInput = document.getElementById('reply-message');
-
-    // Auto-scroll to the latest message
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    replyForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const message = replyMessageInput.value.trim();
-        if (message === '') return;
-
-        const formData = new FormData(replyForm);
-
-        fetch('ajax_handler.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Add the new message to the chat box
-                const newMessageDiv = document.createElement('div');
-                newMessageDiv.classList.add('chat-message', 'user');
-                newMessageDiv.innerHTML = `
-                    <p class="message-content">${data.message.message.replace(/\\n/g, '<br>')}</p>
-                    <span class="message-meta">You on ${data.message.created_at}</span>
-                `;
-                chatBox.appendChild(newMessageDiv);
-                replyMessageInput.value = '';
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    });
-});
-</script>
-
-<?php include 'includes/footer.php'; ?>
+<?php require_once 'includes/footer.php'; ?>

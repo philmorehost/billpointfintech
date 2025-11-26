@@ -1,50 +1,36 @@
 <?php
-require_once 'includes/bootstrap.php';
-require_once 'includes/auth_check.php';
+$page_title = 'Virtual Account';
+require_once 'includes/header.php';
 
+// Logic to retrieve or generate virtual account
 $user_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT kyc_level, virtual_account_number, virtual_bank_name FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT account_number, bank_name FROM virtual_accounts WHERE user_id = ?");
 $stmt->execute([$user_id]);
-$user = $stmt->fetch();
+$account = $stmt->fetch();
 
-$kyc_verified = ($user && $user['kyc_level'] >= 1);
-$has_virtual_account = ($user && !empty($user['virtual_account_number']));
+if (!$account) {
+    // If no account, try to create one (dummy logic for now)
+    // In a real app, this would call the Flutterwave API
+    // $flutterwave = new FlutterwaveAPI(...);
+    // $new_account = $flutterwave->create_virtual_account(...);
+    // and then save it.
+}
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Virtual Account - Billpoint</title>
-    <link rel="stylesheet" href="assets/css/style.css">
-</head>
-<body>
-    <div class="container">
-        <h2>Your Virtual Account</h2>
-        <?php display_flash_message(); ?>
 
-        <?php if (!$kyc_verified): ?>
-            <div class="alert alert-warning">
-                <p>You must complete your KYC verification before you can generate a virtual bank account.</p>
-                <a href="kyc.php" class="btn">Complete KYC Now</a>
-            </div>
-        <?php elseif ($has_virtual_account): ?>
-            <div class="virtual-account-details">
-                <p><strong>Bank Name:</strong> <?php echo htmlspecialchars($user['virtual_bank_name']); ?></p>
-                <p><strong>Account Number:</strong> <?php echo htmlspecialchars($user['virtual_account_number']); ?></p>
-                <p class="small-text">Fund your wallet by transferring money to this account. Your wallet will be credited automatically.</p>
-            </div>
-        <?php else: ?>
-            <div class="alert alert-info">
-                <p>You are eligible to generate a dedicated virtual account for easy wallet funding.</p>
-                <form action="payment_handler.php" method="post">
-                    <input type="hidden" name="action" value="generate_virtual_account">
-                    <?php generate_csrf_token(); ?>
-                    <button type="submit" class="btn">Generate My Virtual Account</button>
-                </form>
-            </div>
-        <?php endif; ?>
-    </div>
-    <?php include 'includes/footer_nav.php'; ?>
-</body>
-</html>
+<div class="virtual-account-container" style="background: #fff; padding: 2rem; border-radius: 1rem; text-align: center;">
+    <h2>Your Dedicated Virtual Account</h2>
+
+    <?php if ($account): ?>
+        <p>Fund your wallet by transferring to the account below:</p>
+        <div class="account-details" style="background: #f9fafb; padding: 1.5rem; border-radius: 0.5rem; margin-top: 1rem;">
+            <h3><?php echo htmlspecialchars($account['account_number']); ?></h3>
+            <p><strong>Bank:</strong> <?php echo htmlspecialchars($account['bank_name']); ?></p>
+            <p><strong>Beneficiary:</strong> <?php echo htmlspecialchars($user['full_name']); ?></p>
+        </div>
+    <?php else: ?>
+        <p>We were unable to generate a virtual account for you at this time.</p>
+        <p>Please <a href="support.php">contact support</a>.</p>
+    <?php endif; ?>
+</div>
+
+<?php require_once 'includes/footer.php'; ?>
