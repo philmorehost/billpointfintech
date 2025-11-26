@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
-require_once __DIR__ . '/auth_check.php';
+require_once __DIR__ . '/../../includes/bootstrap.php';
+require_once __DIR__ . '/../auth_check.php';
 
 $admin_id = $_SESSION['admin_id'];
 $stmt = $pdo->prepare("SELECT full_name FROM admins WHERE id = ?");
