@@ -36,7 +36,6 @@ CREATE TABLE IF NOT EXISTS `users` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- The rest of the schema from the previous read_file call...
 -- Wallets Table
 CREATE TABLE `wallets` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -155,7 +154,7 @@ CREATE TABLE `ticket_messages` (
 -- P2P Transfers Table
 CREATE TABLE `p2p_transfers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `sender_.id` int(11) NOT NULL,
+  `sender_id` int(11) NOT NULL,
   `recipient_id` int(11) NOT NULL,
   `amount` decimal(20,4) NOT NULL,
   `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
@@ -188,7 +187,7 @@ CREATE TABLE `audit_log` (
   `ip_address` varchar(45) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Savings Goals Table
@@ -267,6 +266,7 @@ CREATE TABLE `invoice_items` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE `services` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -284,8 +284,6 @@ INSERT INTO `services` (`name`, `url`, `icon`, `is_active`) VALUES
 ('Electricity', 'electricity.php', NULL, 1),
 ('P2P Transfer', 'p2p_transfer.php', NULL, 1),
 ('Savings', 'savings.php', NULL, 1),
-('Loan', 'loan.php', NULL, 0),
-('Crypto', 'crypto.php', NULL, 0),
 ('Exam PINs', 'exam.php', NULL, 1),
 ('Recharge Card', 'recharge_card.php', NULL, 0),
 ('Bulk SMS', 'bulk_sms.php', NULL, 0);

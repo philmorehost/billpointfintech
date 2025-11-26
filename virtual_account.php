@@ -4,7 +4,7 @@ require_once 'includes/header.php';
 
 // Logic to retrieve or generate virtual account
 $user_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT account_number, bank_name FROM virtual_accounts WHERE user_id = ?");
+$stmt = $pdo->prepare("SELECT virtual_account_number AS account_number, virtual_bank_name AS bank_name FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $account = $stmt->fetch();
 

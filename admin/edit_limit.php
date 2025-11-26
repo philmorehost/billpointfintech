@@ -1,6 +1,6 @@
 <?php
 require_once '../includes/bootstrap.php';
-require_once '../includes/admin_check.php';
+require_once 'includes/auth_check.php';
 
 $limit_id = $_GET['id'] ?? 0;
 if (!$limit_id) {
