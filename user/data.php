@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $pdo = db_connect();
+// Fetch data plans directly from the database
 $stmt = $pdo->query("SELECT * FROM data_plans ORDER BY network, price");
 $data_plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -103,3 +104,11 @@ include '../includes/header.php';
     });
 </script>
 <?php endif; ?>
+<script>
+document.getElementById('plan_id').addEventListener('change', function() {
+    var price = this.options[this.selectedIndex].getAttribute('data-price');
+    document.getElementById('price-display').innerHTML = price ? '₦' + parseFloat(price).toFixed(2) : '₦0.00';
+});
+// Trigger change on load if a plan is pre-selected
+document.getElementById('plan_id').dispatchEvent(new Event('change'));
+</script>

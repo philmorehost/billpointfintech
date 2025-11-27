@@ -177,3 +177,41 @@ body {
 /* Status Badges */
 .badge-active { background-color: #28a745; color: white; }
 .badge-suspended { background-color: #ffc107; color: black; }
+
+/* Responsive Styles for Admin Sidebar */
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px; /* Hide by default on mobile */
+        position: fixed;
+        top: 0;
+        height: 100vh;
+        z-index: 999;
+    }
+    #sidebar.active {
+        margin-left: 0; /* Show when active */
+    }
+    #sidebar.collapsed {
+        margin-left: -80px;
+    }
+    #sidebar.collapsed.active {
+        margin-left: 0;
+        width: 80px;
+    }
+    #content {
+        width: 100%;
+    }
+    .overlay {
+        display: none;
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 998;
+        opacity: 0;
+        transition: all 0.5s ease-in-out;
+    }
+    .overlay.active {
+        display: block;
+        opacity: 1;
+    }
+}

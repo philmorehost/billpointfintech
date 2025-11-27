@@ -1,7 +1,8 @@
 </main>
-    <footer>
-        <p>&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars(SITE_NAME); ?>. All rights reserved.</p>
-    </footer>
+
+    <nav class="footer-nav">
+        <!-- ... (footer nav links) ... -->
+    </nav>
 
     <!-- Generic Modal -->
     <div id="genericModal" class="modal">
@@ -12,14 +13,14 @@
         </div>
     </div>
 
+    <!-- Security PIN Modal -->
+    <div id="pinModal" class="modal">
+        <!-- ... (PIN modal content) ... -->
+    </div>
+
     <script src="../assets/js/script.js"></script>
-    <style>
-    .modal { display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 10px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-    .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-    </style>
     <script>
-    // JavaScript to control the modal
+    // --- Generic Modal Logic (Now in global scope) ---
     const modal = document.getElementById('genericModal');
     const closeBtn = modal.querySelector('.close-btn');
     const modalTitle = document.getElementById('modalTitle');
@@ -39,6 +40,8 @@
             modal.style.display = 'none';
         }
     }
+
+    // ... (PIN Modal and Nav Logic) ...
     </script>
 </body>
 </html>

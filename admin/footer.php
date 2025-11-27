@@ -1,5 +1,7 @@
       </main>
     </div>
+    <!-- Overlay for mobile -->
+    <div class="overlay"></div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -7,8 +9,21 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
     $(document).ready(function () {
+        // Desktop toggle
         $('#sidebar-toggle').on('click', function () {
-            $('#sidebar').toggleClass('collapsed');
+            if ($(window).width() > 768) {
+                $('#sidebar').toggleClass('collapsed');
+            } else {
+                // Mobile toggle
+                $('#sidebar').toggleClass('active');
+                $('.overlay').toggleClass('active');
+            }
+        });
+
+        // Hide sidebar when overlay is clicked
+        $('.overlay').on('click', function () {
+            $('#sidebar').removeClass('active');
+            $('.overlay').removeClass('active');
         });
     });
 </script>

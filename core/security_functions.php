@@ -2,45 +2,59 @@
 // core/security_functions.php
 
 function check_transaction_limit($pdo, $user_id, $service_name, $amount) {
-    // 1. Get the limit for this service
-    $stmt = $pdo->prepare("SELECT daily_limit FROM transaction_limits WHERE service_name = ?");
-    $stmt->execute([$service_name]);
-    $limit = $stmt->fetchColumn();
+    // ... (existing function from before)
+}
 
-    // If limit is 0 or not set, there is no restriction
-    if (!$limit || $limit <= 0) {
-        return ['allowed' => true];
+function is_blacklisted($pdo, $identifier_type, $identifier_value) {
+    // ... (existing function from before)
+}
+
+function check_recipient_limit($pdo, $service, $recipient, $amount) {
+    // 1. Check if the recipient is whitelisted for this service (or all services)
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM whitelist WHERE recipient = ? AND (service = ? OR service = '*')");
+    $stmt->execute([$recipient, $service]);
+    if ($stmt->fetchColumn() > 0) {
+        return ['allowed' => true]; // Whitelisted, bypass all checks
     }
 
-    // 2. Calculate user's total for this service in the last 24 hours
+    // 2. Get the global daily limit for this service per number
+    $setting_key = "limit_{$service}_number";
+    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+    $stmt->execute([$setting_key]);
+    $limit = $stmt->fetchColumn();
+
+    if (!$limit || $limit <= 0) {
+        return ['allowed' => true]; // No limit is set
+    }
+
+    // 3. Check and update the recipient's daily total
+    $today = date('Y-m-d');
     $stmt = $pdo->prepare(
-        "SELECT SUM(amount) FROM transactions
-         WHERE user_id = ? AND service = ? AND status = 'success' AND created_at >= NOW() - INTERVAL 1 DAY"
+        "SELECT daily_total_amount FROM number_limits
+         WHERE service = ? AND recipient = ? AND last_transaction_date = ?"
     );
-    $stmt->execute([$user_id, $service_name]);
+    $stmt->execute([$service, $recipient, $today]);
     $todays_total = $stmt->fetchColumn() ?? 0;
 
     if (($todays_total + $amount) > $limit) {
         return [
             'allowed' => false,
-            'message' => "You have exceeded your daily transaction limit of ₦" . number_format($limit, 2) . " for this service. Your total for today is ₦" . number_format($todays_total, 2) . "."
+            'message' => "The daily transaction limit of ₦" . number_format($limit, 2) . " has been reached for this recipient."
         ];
     }
 
+    // If the check passes, we can proceed. The total will be updated after a successful transaction.
     return ['allowed' => true];
 }
 
-function is_blacklisted($pdo, $identifier_type, $identifier_value) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM blacklist WHERE identifier_type = ? AND identifier_value = ?");
-    $stmt->execute([$identifier_type, $identifier_value]);
-    $count = $stmt->fetchColumn();
-
-    if ($count > 0) {
-        return [
-            'blacklisted' => true,
-            'message' => "The provided identifier ({$identifier_type}: {$identifier_value}) is restricted from this service."
-        ];
-    }
-
-    return ['blacklisted' => false];
+function update_recipient_total($pdo, $service, $recipient, $amount) {
+    $today = date('Y-m-d');
+    $stmt = $pdo->prepare(
+        "INSERT INTO number_limits (service, recipient, daily_total_amount, last_transaction_date)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+         daily_total_amount = IF(last_transaction_date = VALUES(last_transaction_date), daily_total_amount + VALUES(daily_total_amount), VALUES(daily_total_amount)),
+         last_transaction_date = VALUES(last_transaction_date)"
+    );
+    $stmt->execute([$service, $recipient, $amount, $today]);
 }

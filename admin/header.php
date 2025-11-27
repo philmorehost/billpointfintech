@@ -30,7 +30,18 @@ if (!isset($_SESSION['admin_id'])) {
                 <a href="index.php"><i class="fas fa-tachometer-alt"></i> <span class="link-text">Dashboard</span></a>
             </li>
             <li>
-                <a href="users.php"><i class="fas fa-users"></i> <span class="link-text">Manage Users</span></a>
+                <a href="#userSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-users"></i> <span class="link-text">Users</span></a>
+                <ul class="collapse list-unstyled" id="userSubmenu">
+                    <li><a href="users.php"><span class="link-text">Manage Users</span></a></li>
+                    <!-- We can add more user-related links here if needed -->
+                </ul>
+            </li>
+            <li>
+                <a href="#productSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-box-open"></i> <span class="link-text">Products</span></a>
+                <ul class="collapse list-unstyled" id="productSubmenu">
+                    <li><a href="products.php"><span class="link-text">Manage Data Plans</span></a></li>
+                    <!-- Links for Cable TV, etc., can be added here -->
+                </ul>
             </li>
              <li>
                 <a href="#settingsSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-cogs"></i> <span class="link-text">Settings</span></a>
