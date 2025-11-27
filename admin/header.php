@@ -26,14 +26,30 @@ if (!isset($_SESSION['admin_id'])) {
         </div>
 
         <ul class="list-unstyled components">
-            <p>Admin Menu</p>
             <li>
                 <a href="index.php"><i class="fas fa-tachometer-alt"></i> <span class="link-text">Dashboard</span></a>
             </li>
             <li>
                 <a href="users.php"><i class="fas fa-users"></i> <span class="link-text">Manage Users</span></a>
             </li>
-            <!-- More links will be added here in later steps -->
+             <li>
+                <a href="#settingsSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-cogs"></i> <span class="link-text">Settings</span></a>
+                <ul class="collapse list-unstyled" id="settingsSubmenu">
+                    <li><a href="settings.php"><span class="link-text">System Settings</span></a></li>
+                    <li><a href="gateways.php"><span class="link-text">Payment Gateways</span></a></li>
+                    <li><a href="api-manager.php"><span class="link-text">API Manager</span></a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#securitySubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-shield-alt"></i> <span class="link-text">Security</span></a>
+                <ul class="collapse list-unstyled" id="securitySubmenu">
+                    <li><a href="limits.php"><span class="link-text">Transaction Limits</span></a></li>
+                    <li><a href="blacklist.php"><span class="link-text">Blacklist</span></a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="manage-admins.php"><i class="fas fa-user-shield"></i> <span class="link-text">Manage Admins</span></a>
+            </li>
         </ul>
     </nav>
 
