@@ -6,6 +6,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `wallet_balance` decimal(10,2) NOT NULL DEFAULT 0.00,
   `paystack_customer_code` varchar(100) DEFAULT NULL,
+  `status` enum('active','suspended','deleted') NOT NULL DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
@@ -74,4 +75,26 @@ CREATE TABLE `virtual_accounts` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `virtual_accounts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `settings` (
+  `setting_key` varchar(50) NOT NULL,
+  `setting_value` text DEFAULT NULL,
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `transaction_limits` (
+  `service_name` varchar(50) NOT NULL,
+  `daily_limit` decimal(12,2) NOT NULL DEFAULT 0.00,
+  PRIMARY KEY (`service_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `blacklist` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `identifier_type` varchar(50) NOT NULL, -- e.g., 'phone', 'meter_number', 'smartcard'
+  `identifier_value` varchar(100) NOT NULL,
+  `reason` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_identifier` (`identifier_type`, `identifier_value`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

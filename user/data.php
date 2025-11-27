@@ -1,6 +1,7 @@
 <?php
-require_once '../core/vtu_api.php';
 require_once '../core/functions.php';
+require_once '../core/vtu_api.php';
+require_once '../core/security_functions.php';
 
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
@@ -13,26 +14,36 @@ $data_plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $errors = [];
 $success_message = '';
+$limit_error = null;
+$user_id = $_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $plan_id = trim($_POST['plan_id']);
-    $phone_number = trim($_POST['phone_number']);
-    $user_id = $_SESSION['user_id'];
+    $plan_id = $_POST['plan_id'] ?? '';
+    $phone_number = trim($_POST['phone_number'] ?? '');
 
-    if (empty($plan_id) || empty($phone_number)) {
-        $errors[] = 'All fields are required.';
-    }
+    $stmt = $pdo->prepare("SELECT * FROM data_plans WHERE id = ?");
+    $stmt->execute([$plan_id]);
+    $plan = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (empty($errors)) {
-        $stmt = $pdo->prepare("SELECT * FROM data_plans WHERE id = ?");
-        $stmt->execute([$plan_id]);
-        $plan = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$plan) {
+        $errors[] = 'Invalid data plan selected.';
+    } else {
+        $amount = $plan['price'];
 
-        if (!$plan) {
-            $errors[] = 'Invalid data plan selected.';
-        } else {
-            $amount = $plan['price'];
-            $description = "Data purchase: {$plan['quantity']} of {$plan['type']} for $phone_number on {$plan['network']}";
+        $limit_check = check_transaction_limit($pdo, $user_id, 'data', $amount);
+        if (!$limit_check['allowed']) {
+            $limit_error = $limit_check['message'];
+        }
+
+        $blacklist_check = is_blacklisted($pdo, 'phone', $phone_number);
+        if ($blacklist_check['blacklisted']) {
+            $errors[] = $blacklist_check['message'];
+        }
+
+        if (empty($phone_number)) $errors[] = "Phone number is required.";
+
+        if (empty($errors) && !$limit_error) {
+            $description = "Data purchase: {$plan['quantity']} of {$plan['type']} for $phone_number";
             $transaction_id = create_transaction($user_id, 'Data', $description, $amount);
 
             if (!$transaction_id) {
@@ -40,14 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 if (debit_wallet($user_id, $amount)) {
                     $response = buy_data($plan['network'], $phone_number, $plan['type'], $plan['quantity']);
-
                     if (isset($response['status']) && $response['status'] === 'success') {
                         update_transaction_status($transaction_id, 'success', $response['ref'], json_encode($response));
                         $success_message = $response['response_desc'];
                     } else {
                         credit_wallet($user_id, $amount);
                         update_transaction_status($transaction_id, 'failed', null, json_encode($response));
-                        $errors[] = isset($response['desc']) ? $response['desc'] : 'An unknown error occurred.';
+                        $errors[] = $response['desc'] ?? 'An unknown error occurred.';
                     }
                 } else {
                     update_transaction_status($transaction_id, 'failed', null, 'Insufficient funds');
@@ -60,32 +70,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include '../includes/header.php';
 ?>
-
 <div class="container">
     <h2>Buy Data</h2>
+    <?php if (!empty($errors)): ?> <div class="errors"><?php foreach ($errors as $error): ?><p><?php echo htmlspecialchars($error); ?></p><?php endforeach; ?></div> <?php endif; ?>
+    <?php if ($success_message): ?> <div class="success"><p><?php echo htmlspecialchars($success_message); ?></p></div> <?php endif; ?>
 
-    <?php if (!empty($errors)): ?>
-        <div class="errors">
-            <?php foreach ($errors as $error): ?>
-                <p><?php echo $error; ?></p>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if ($success_message): ?>
-        <div class="success">
-            <p><?php echo $success_message; ?></p>
-        </div>
-    <?php endif; ?>
-
-    <form action="data.php" method="post">
+    <form method="post">
         <div class="form-group">
             <label for="plan_id">Select Plan</label>
             <select name="plan_id" id="plan_id" required>
                 <option value="">-- Select a Plan --</option>
-                <?php foreach ($data_plans as $plan): ?>
-                    <option value="<?php echo $plan['id']; ?>" data-price="<?php echo $plan['price']; ?>">
-                        <?php echo strtoupper($plan['network']) . " " . $plan['quantity'] . " (" . strtoupper($plan['type']) . ") - &#8358;" . $plan['price']; ?>
+                <?php foreach ($data_plans as $p): ?>
+                    <option value="<?php echo htmlspecialchars($p['id']); ?>" data-price="<?php echo htmlspecialchars($p['price']); ?>">
+                        <?php echo htmlspecialchars(strtoupper($p['network']) . " " . $p['quantity'] . " (" . strtoupper($p['type']) . ") - ₦" . $p['price']); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -94,16 +91,15 @@ include '../includes/header.php';
             <label for="phone_number">Phone Number</label>
             <input type="tel" name="phone_number" id="phone_number" required>
         </div>
-        <p><strong>Price:</strong> <span id="price-display">&#8358;0.00</span></p>
+        <p><strong>Price:</strong> <span id="price-display">₦0.00</span></p>
         <button type="submit">Buy Now</button>
     </form>
 </div>
-
-<script>
-document.getElementById('plan_id').addEventListener('change', function() {
-    var price = this.options[this.selectedIndex].getAttribute('data-price');
-    document.getElementById('price-display').innerHTML = price ? '&#8358;' + price : '&#8358;0.00';
-});
-</script>
-
 <?php include '../includes/footer.php'; ?>
+<?php if ($limit_error): ?>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        showModal('Transaction Limit Exceeded', <?php echo json_encode($limit_error); ?>);
+    });
+</script>
+<?php endif; ?>
