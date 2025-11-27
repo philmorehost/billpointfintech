@@ -54,6 +54,7 @@ CREATE TABLE `services` (
   `icon_class` varchar(50) NOT NULL,
   `description` text DEFAULT NULL,
   `is_available` tinyint(1) NOT NULL DEFAULT 1,
+  `discount_percentage` decimal(5,2) NOT NULL DEFAULT 0.00,
   PRIMARY KEY (`id`),
   UNIQUE KEY `slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

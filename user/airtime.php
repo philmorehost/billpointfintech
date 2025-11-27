@@ -1,4 +1,5 @@
 <?php
+require_once '../core/config.php';
 require_once '../core/functions.php';
 require_once '../core/vtu_api.php';
 require_once '../core/security_functions.php';
@@ -53,9 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     if (empty($errors) && !$limit_error) {
-        $description = "Airtime purchase: $amount for $phone_number on $network_code";
+        // Calculate the discounted price
+        $final_amount = calculate_discounted_price($pdo, 'airtime', $amount);
+        $description = "Airtime purchase: $amount for $phone_number on $network_code (Paid: ₦$final_amount)";
 
-        if (debit_wallet($user_id, $amount)) {
+        if (debit_wallet($user_id, $final_amount)) {
+            // Note: We log the original amount in the transaction, but the user was charged the final_amount
             $transaction_id = create_transaction($user_id, 'Airtime', $description, $amount, 'pending', null, null, $phone_number);
 
             $response = buy_airtime($network_code, $phone_number, $amount);

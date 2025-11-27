@@ -24,4 +24,25 @@ function db_connect() {
     }
 }
 
+/**
+ * Calculates the final price of an item after applying a service discount.
+ *
+ * @param PDO $pdo The database connection object.
+ * @param string $service_slug The unique slug for the service (e.g., 'airtime').
+ * @param float $original_price The original price of the item.
+ * @return float The price after the discount has been applied.
+ */
+function calculate_discounted_price($pdo, $service_slug, $original_price) {
+    $stmt = $pdo->prepare("SELECT discount_percentage FROM services WHERE slug = ? AND is_available = 1");
+    $stmt->execute([$service_slug]);
+    $service = $stmt->fetch();
+
+    if ($service && $service['discount_percentage'] > 0) {
+        $discount_factor = (100 - $service['discount_percentage']) / 100;
+        return round($original_price * $discount_factor, 2);
+    }
+
+    return $original_price;
+}
+
 // You can add other global helper functions here in the future.

@@ -41,6 +41,7 @@ if (!isset($_SESSION['admin_id'])) {
                 <a href="#productSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-box-open"></i> <span class="link-text">Products</span></a>
                 <ul class="collapse list-unstyled" id="productSubmenu">
                     <li><a href="products.php"><span class="link-text">Manage Data Plans</span></a></li>
+                    <li><a href="service-manager.php"><span class="link-text">Service Discounts</span></a></li>
                     <!-- Links for Cable TV, etc., can be added here -->
                 </ul>
             </li>
