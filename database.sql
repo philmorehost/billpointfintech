@@ -5,6 +5,7 @@ CREATE TABLE `users` (
   `phone_number` varchar(20) NOT NULL,
   `password` varchar(255) NOT NULL,
   `wallet_balance` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `paystack_customer_code` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
@@ -60,4 +61,17 @@ CREATE TABLE `networks` (
   `name` varchar(20) NOT NULL,
   `code` varchar(20) NOT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `virtual_accounts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `bank_name` varchar(100) NOT NULL,
+  `account_number` varchar(20) NOT NULL,
+  `account_name` varchar(100) NOT NULL,
+  `paystack_assignment_id` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `virtual_accounts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -12,6 +12,8 @@ define('SITE_URL', 'http://localhost/billpoint');
 
 // API Key - It's recommended to use an environment variable for this in a production environment
 define('VTU_API_KEY', getenv('VTU_API_KEY') ?: 'YOUR_API_KEY_HERE');
+define('PAYSTACK_SECRET_KEY', getenv('PAYSTACK_SECRET_KEY') ?: '');
+define('PAYSTACK_PUBLIC_KEY', getenv('PAYSTACK_PUBLIC_KEY') ?: '');
 
 // Start the session
 session_start();
