@@ -1,91 +1,79 @@
 <?php
+require_once '../core/auth_check.php';
 require_once '../core/functions.php';
 
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-$errors = [];
-$user_id = $_SESSION['user_id'];
 $pdo = db_connect();
-$stmt = $pdo->prepare("SELECT email FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$user_email = $stmt->fetchColumn();
+$user_id = $_SESSION['user_id'];
+$feedback = ['message' => '', 'type' => ''];
 
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Handle payment notification submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'notify') {
     $amount = filter_input(INPUT_POST, 'amount', FILTER_VALIDATE_FLOAT);
+    $payment_method = $_POST['payment_method'] ?? '';
 
-    if (empty($amount) || $amount <= 0) {
-        $errors[] = 'Please enter a valid amount.';
+    if (empty($amount) || empty($payment_method) || $amount <= 0) {
+        $feedback = ['message' => 'Please provide a valid amount and payment method.', 'type' => 'errors'];
     } else {
-        // Amount is in kobo for Paystack
-        $amount_in_kobo = $amount * 100;
-
-        // Generate a unique reference for this transaction
-        $reference = 'blp_' . uniqid();
-
-        // Initialize transaction with Paystack
-        $url = 'https://api.paystack.co/transaction/initialize';
-        $fields = [
-            'email' => $user_email,
-            'amount' => $amount_in_kobo,
-            'reference' => $reference,
-            'callback_url' => SITE_URL . 'user/payment-callback.php'
-        ];
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Authorization: Bearer ' . PAYSTACK_SECRET_KEY,
-            'Content-Type: application/json',
-        ]);
-
-        $response = curl_exec($ch);
-        $err = curl_error($ch);
-        curl_close($ch);
-
-        if ($err) {
-            $errors[] = 'An error occurred. Please try again.';
-        } else {
-            $result = json_decode($response, true);
-            if (isset($result['status']) && $result['status'] == true) {
-                // Redirect to Paystack checkout page
-                header('Location: ' . $result['data']['authorization_url']);
-                exit;
-            } else {
-                $errors[] = 'Could not initiate payment. ' . ($result['message'] ?? '');
-            }
+        try {
+            $stmt = $pdo->prepare("INSERT INTO deposit_notifications (user_id, amount, payment_method) VALUES (?, ?, ?)");
+            $stmt->execute([$user_id, $amount, $payment_method]);
+            $feedback = ['message' => 'Your payment notification has been sent. Your wallet will be credited upon confirmation.', 'type' => 'success'];
+        } catch (Exception $e) {
+            $feedback = ['message' => 'An error occurred. Please try again.', 'type' => 'errors'];
         }
     }
 }
+
+
+// Fetch manual deposit details
+$stmt = $pdo->query("SELECT * FROM settings WHERE setting_key LIKE 'manual_%'");
+$manual_settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
 include '../includes/header.php';
 ?>
 
 <div class="container">
-    <h2>Fund Wallet via Card</h2>
-    <div class="notice"><p>You will be redirected to our secure payment partner, Paystack, to complete this transaction.</p></div>
+    <h2>Fund Wallet</h2>
 
-    <?php if (!empty($errors)): ?>
-        <div class="errors">
-            <?php foreach ($errors as $error): ?>
-                <p><?php echo htmlspecialchars($error); ?></p>
-            <?php endforeach; ?>
-        </div>
+    <?php if ($feedback['message']): ?>
+        <div class="<?php echo htmlspecialchars($feedback['type']); ?>"><p><?php echo htmlspecialchars($feedback['message']); ?></p></div>
     <?php endif; ?>
 
-    <form method="post">
-        <div class="form-group">
-            <label for="amount">Amount (₦)</label>
-            <input type="number" name="amount" id="amount" required min="100" step="0.01">
+    <div class="dashboard-widgets">
+        <div class="widget">
+            <h3>Automated Funding (Paystack)</h3>
+            <p>Enter an amount and pay instantly with your card.</p>
+            <a href="fund-wallet-card.php" class="btn btn-primary">Pay with Card</a>
         </div>
-        <button type="submit">Proceed to Payment</button>
-    </form>
+        <div class="widget">
+            <h3>Manual Bank Deposit</h3>
+            <?php if (!empty($manual_settings['manual_bank_name'])): ?>
+                <div class="account-details">
+                    <p>Make a deposit to the account below and submit your payment details for confirmation.</p>
+                    <p><strong>Bank Name:</strong> <?php echo htmlspecialchars($manual_settings['manual_bank_name']); ?></p>
+                    <p><strong>Account Number:</strong> <?php echo htmlspecialchars($manual_settings['manual_account_number']); ?></p>
+                    <p><strong>Account Name:</strong> <?php echo htmlspecialchars($manual_settings['manual_account_name']); ?></p>
+                </div>
+                <hr>
+                <h4>Submit Payment Notification</h4>
+                <form method="post">
+                    <input type="hidden" name="action" value="notify">
+                    <div class="form-group">
+                        <label for="amount">Amount Sent (₦)</label>
+                        <input type="number" name="amount" id="amount" required step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="payment_method">Payment Method (e.g., Your Name)</label>
+                        <input type="text" name="payment_method" id="payment_method" required>
+                    </div>
+                    <button type="submit">Notify Admin</button>
+                </form>
+            <?php else: ?>
+                <p>Manual deposits are currently not available. Please check back later.</p>
+            <?php endif; ?>
+        </div>
+    </div>
 </div>
+<style>.account-details p { font-size: 1.1rem; margin: 8px 0; }</style>
 
 <?php include '../includes/footer.php'; ?>

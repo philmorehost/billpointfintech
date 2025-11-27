@@ -17,11 +17,4 @@ CREATE TABLE `users` (
   KEY `remember_token` (`remember_token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- ... (rest of the tables)
-
-CREATE TABLE `daily_rewards` (
-  `user_id` int(11) NOT NULL,
-  `last_claimed_date` date NOT NULL,
-  PRIMARY KEY (`user_id`),
-  CONSTRAINT `daily_rewards_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- ... (rest of the database schema remains the same)

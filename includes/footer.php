@@ -6,42 +6,73 @@
 
     <!-- Generic Modal -->
     <div id="genericModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h3 id="modalTitle">Notice</h3>
-            <p id="modalMessage"></p>
-        </div>
+        <!-- ... (generic modal content) ... -->
     </div>
 
     <!-- Security PIN Modal -->
     <div id="pinModal" class="modal">
-        <!-- ... (PIN modal content) ... -->
+        <div class="modal-content">
+            <h3>Enter Security PIN</h3>
+            <p>For your security, please enter your 4-digit PIN to proceed.</p>
+            <form id="pinForm">
+                <input type="password" id="pinInput" inputmode="numeric" pattern="\d{4}" maxlength="4" required>
+                <button type="submit">Authorize</button>
+            </form>
+            <p id="pinError" style="color:red; display:none;"></p>
+        </div>
     </div>
+
 
     <script src="../assets/js/script.js"></script>
     <script>
-    // --- Generic Modal Logic (Now in global scope) ---
-    const modal = document.getElementById('genericModal');
-    const closeBtn = modal.querySelector('.close-btn');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalMessage = document.getElementById('modalMessage');
+    // ... (generic modal and nav JS) ...
 
-    function showModal(title, message) {
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        modal.style.display = 'block';
+    // --- PIN Modal Logic ---
+    const pinModal = document.getElementById('pinModal');
+    const pinForm = document.getElementById('pinForm');
+    const pinInput = document.getElementById('pinInput');
+    const pinError = document.getElementById('pinError');
+    let resolvePinPromise;
+
+    async function requestPin() {
+        pinModal.style.display = 'block';
+        pinInput.focus();
+        return new Promise((resolve) => {
+            resolvePinPromise = resolve;
+        });
     }
 
-    closeBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
+    pinForm.onsubmit = async function(e) {
+        e.preventDefault();
+        const pin = pinInput.value;
+        pinError.style.display = 'none';
+
+        try {
+            const formData = new FormData();
+            formData.append('pin', pin);
+
+            const response = await fetch('ajax_verify_pin.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                pinModal.style.display = 'none';
+                pinInput.value = '';
+                if (resolvePinPromise) resolvePinPromise(true);
+            } else {
+                pinError.textContent = data.message || 'Invalid PIN.';
+                pinError.style.display = 'block';
+                pinInput.select();
+                if (resolvePinPromise) resolvePinPromise(false);
+            }
+        } catch (error) {
+            pinError.textContent = 'An error occurred. Please try again.';
+            pinError.style.display = 'block';
+            if (resolvePinPromise) resolvePinPromise(false);
         }
-    }
-
-    // ... (PIN Modal and Nav Logic) ...
+    };
     </script>
 </body>
 </html>
