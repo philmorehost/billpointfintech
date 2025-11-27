@@ -29,9 +29,12 @@ CREATE TABLE `transactions` (
 CREATE TABLE `services` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
+  `slug` varchar(50) NOT NULL,
+  `icon_class` varchar(50) NOT NULL,
   `description` text DEFAULT NULL,
   `is_available` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `admins` (

@@ -77,3 +77,115 @@ function buy_data($network, $phone_number, $type, $quantity) {
         'quantity' => $quantity
     ]);
 }
+
+/**
+ * Verify a Cable TV customer's details
+ *
+ * @param string $type The cable provider (e.g., 'dstv', 'gotv')
+ * @param string $iuc_number The customer's IUC or smartcard number
+ * @return array The API response
+ */
+function verify_cable_customer($type, $iuc_number) {
+    return make_api_request('verify-cable.php', [
+        'type' => $type,
+        'iuc_number' => $iuc_number
+    ]);
+}
+
+/**
+ * Pay for a Cable TV subscription
+ *
+ * @param string $type The cable provider
+ * @param string $iuc_number The customer's IUC number
+ * @param string $package The selected package
+ * @return array The API response
+ */
+function pay_cable_bill($type, $iuc_number, $package) {
+    return make_api_request('cable.php', [
+        'type' => $type,
+        'iuc_number' => $iuc_number,
+        'package' => $package
+    ]);
+}
+
+/**
+ * Verify an Electricity customer's details
+ *
+ * @param string $provider The electricity provider (e.g., 'ekedc')
+ * @param string $meter_number The customer's meter number
+ * @param string $type The meter type ('prepaid' or 'postpaid')
+ * @return array The API response
+ */
+function verify_electricity_customer($provider, $meter_number, $type) {
+    return make_api_request('verify-electric.php', [
+        'provider' => $provider,
+        'meter_number' => $meter_number,
+        'type' => $type
+    ]);
+}
+
+/**
+ * Pay for an Electricity bill
+ *
+ * @param string $provider The electricity provider
+ * @param string $meter_number The customer's meter number
+ * @param string $type The meter type
+ * @param int $amount The amount to pay
+ * @return array The API response
+ */
+function pay_electricity_bill($provider, $meter_number, $type, $amount) {
+    return make_api_request('electric.php', [
+        'provider' => $provider,
+        'meter_number' => $meter_number,
+        'type' => $type,
+        'amount' => $amount
+    ]);
+}
+
+/**
+ * Purchase an Exam Pin
+ *
+ * @param string $type The exam type (e.g., 'waec')
+ * @param int $quantity The number of pins to purchase
+ * @return array The API response
+ */
+function purchase_exam_pin($type, $quantity) {
+    return make_api_request('exam.php', [
+        'type' => $type,
+        'quantity' => $quantity
+    ]);
+}
+
+/**
+ * Verify a Bank Account's details
+ *
+ * @param string $bank_code The bank code
+ * @param string $account_number The customer's account number
+ * @return array The API response, including an 'enquiry_id' on success
+ */
+function verify_bank_account($bank_code, $account_number) {
+    return make_api_request('verify-bank.php', [
+        'bank_code' => $bank_code,
+        'account_number' => $account_number
+    ]);
+}
+
+/**
+ * Perform a Bank Transfer
+ *
+ * @param string $enquiry_id The ID from the verification step
+ * @param string $bank_code
+ * @param string $account_number
+ * @param int $amount
+ * @param string $narration
+ * @return array The API response
+ */
+function transfer_funds($enquiry_id, $bank_code, $account_number, $amount, $narration) {
+    return make_api_request('bank-transfer.php', [
+        'enquiry_id' => $enquiry_id,
+        'bank_code' => $bank_code,
+        'account_number' => $account_number,
+        'amount' => $amount,
+        'narration' => $narration
+    ]);
+}
