@@ -1,6 +1,12 @@
 <?php
 // core/auth_check.php
 
+// This file is included on almost every user-facing page,
+// so it's the perfect place to centralize our core includes.
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/functions.php';
+
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
