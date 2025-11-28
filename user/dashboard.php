@@ -45,7 +45,7 @@ include '../includes/header.php'; // Will be a much simpler header now
             <div class="service-button">
                 <a href="<?php echo htmlspecialchars($service['slug']); ?>.php">
                     <i class="fas <?php echo htmlspecialchars($service['icon_class']); ?>"></i>
-                    <p><?php echo htmlspecialchars($service['name']); ?></p>
+                    <p><?php echo htmlspecialchars(str_replace("Buy ", "", $service['name'])); ?></p>
                 </a>
             </div>
         <?php endif; endforeach; ?>
@@ -76,6 +76,38 @@ include '../includes/header.php'; // Will be a much simpler header now
         <?php endforeach; ?>
     </div>
 </div>
+
+<!-- Recent Transactions -->
+<div class="container app-view">
+    <h3>Recent Activity</h3>
+    <div class="transaction-list">
+        <?php
+        $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY transaction_date DESC LIMIT 2");
+        $stmt->execute([$_SESSION['user_id']]);
+        $recent_transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($recent_transactions) > 0):
+            foreach ($recent_transactions as $transaction): ?>
+                <div class="transaction-item">
+                    <div class="transaction-icon">
+                        <i class="fas fa-arrow-down"></i> <!-- Placeholder Icon -->
+                    </div>
+                    <div class="transaction-details">
+                        <p><?php echo htmlspecialchars(ucfirst($transaction['type'])); ?> - <?php echo htmlspecialchars($transaction['description']); ?></p>
+                        <small><?php echo date("d M, Y g:ia", strtotime($transaction['transaction_date'])); ?></small>
+                    </div>
+                    <div class="transaction-amount <?php echo $transaction['amount'] > 0 ? 'credit' : 'debit'; ?>">
+                        &#8358;<?php echo htmlspecialchars(number_format(abs($transaction['amount']), 2)); ?>
+                    </div>
+                </div>
+            <?php endforeach;
+        else: ?>
+            <p>No recent transactions.</p>
+        <?php endif; ?>
+    </div>
+     <a href="transactions.php" class="view-all-link">View All</a>
+</div>
+
 
 <?php include '../includes/footer.php'; // Will contain the new fixed nav ?>
 
