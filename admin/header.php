@@ -6,6 +6,11 @@ if (!isset($_SESSION['admin_id'])) {
     header('Location: login.php');
     exit;
 }
+
+// Run database migrations on every admin page load
+$pdo = db_connect();
+run_database_migrations($pdo);
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

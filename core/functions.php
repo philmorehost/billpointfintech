@@ -45,4 +45,29 @@ function calculate_discounted_price($pdo, $service_slug, $original_price) {
     return $original_price;
 }
 
+/**
+ * A simple database migration utility.
+ *
+ * This function checks for missing columns and adds them, ensuring the database
+ * schema is up-to-date with the application code.
+ *
+ * @param PDO $pdo The database connection object.
+ */
+function run_database_migrations($pdo) {
+    // Migration 1: Add 'discount_percentage' to 'services' table
+    try {
+        // Check if the column exists. This is more robust than just running the query.
+        $result = $pdo->query("SHOW COLUMNS FROM `services` LIKE 'discount_percentage'");
+        if ($result->rowCount() == 0) {
+            $pdo->exec("ALTER TABLE `services` ADD `discount_percentage` DECIMAL(5,2) NOT NULL DEFAULT '0.00' AFTER `is_available`");
+        }
+    } catch (PDOException $e) {
+        // If the table doesn't exist yet (e.g., during installation), we can safely ignore this.
+        if (strpos($e->getMessage(), "exist") === false) {
+            // For other errors, it's better to log or die
+            error_log("Migration Error: " . $e->getMessage());
+        }
+    }
+}
+
 // You can add other global helper functions here in the future.

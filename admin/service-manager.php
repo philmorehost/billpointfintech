@@ -44,7 +44,7 @@ $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php foreach ($services as $service): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($service['name']); ?></td>
-                    <td><?php echo htmlspecialchars($service['discount_percentage']); ?></td>
+                    <td><?php echo htmlspecialchars($service['discount_percentage'] ?? '0.00'); ?></td>
                     <form method="post">
                         <input type="hidden" name="service_id" value="<?php echo $service['id']; ?>">
                         <td>
