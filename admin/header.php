@@ -20,6 +20,7 @@ run_database_migrations($pdo);
     <title>Admin Panel - <?php echo htmlspecialchars(SITE_NAME); ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
 </head>
@@ -42,7 +43,7 @@ run_database_migrations($pdo);
                 <a href="#userSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-users"></i> <span class="link-text">Users</span></a>
                 <ul class="collapse list-unstyled" id="userSubmenu">
                     <li><a href="users.php"><span class="link-text">Manage Users</span></a></li>
-                    <!-- We can add more user-related links here if needed -->
+                    <li><a href="pending-deposits.php"><span class="link-text">Pending Deposits</span></a></li>
                 </ul>
             </li>
             <li>

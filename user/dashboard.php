@@ -40,37 +40,11 @@ include '../includes/header.php'; // Will be a much simpler header now
 <div class="container app-view">
     <h3>Services</h3>
     <div class="services-grid-app">
-        <?php foreach ($services as $service):
-            if (in_array($service['slug'], $primary_services)): ?>
-            <div class="service-button">
-                <a href="<?php echo htmlspecialchars($service['slug']); ?>.php">
-                    <i class="fas <?php echo htmlspecialchars($service['icon_class']); ?>"></i>
-                    <p><?php echo htmlspecialchars(str_replace("Buy ", "", $service['name'])); ?></p>
-                </a>
-            </div>
-        <?php endif; endforeach; ?>
-
-        <div class="service-button more" id="more-services-btn">
-             <a href="#">
-                <i class="fas fa-th-large"></i>
-                <p>More</p>
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Full Screen Modal for "More" Services -->
-<div id="more-services-modal" class="full-screen-modal">
-    <div class="modal-header">
-        <h2>All Services</h2>
-        <span class="modal-close" id="modal-close-btn">&times;</span>
-    </div>
-    <div class="modal-grid">
         <?php foreach ($services as $service): ?>
             <div class="service-button">
                 <a href="<?php echo htmlspecialchars($service['slug']); ?>.php">
                     <i class="fas <?php echo htmlspecialchars($service['icon_class']); ?>"></i>
-                    <p><?php echo htmlspecialchars($service['name']); ?></p>
+                    <p><?php echo htmlspecialchars(str_replace("Buy ", "", $service['name'])); ?></p>
                 </a>
             </div>
         <?php endforeach; ?>
@@ -110,13 +84,3 @@ include '../includes/header.php'; // Will be a much simpler header now
 
 
 <?php include '../includes/footer.php'; // Will contain the new fixed nav ?>
-
-<script>
-document.getElementById('more-services-btn').addEventListener('click', function(e) {
-    e.preventDefault();
-    document.getElementById('more-services-modal').style.display = 'block';
-});
-document.getElementById('modal-close-btn').addEventListener('click', function() {
-    document.getElementById('more-services-modal').style.display = 'none';
-});
-</script>

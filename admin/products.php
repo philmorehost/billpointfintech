@@ -39,7 +39,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 
-$stmt = $pdo->query("SELECT * FROM data_plans ORDER BY network, price");
+// Pagination logic
+$limit = 10; // Number of entries per page
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Get total number of plans for pagination
+$total_stmt = $pdo->query("SELECT COUNT(*) FROM data_plans");
+$total_plans = $total_stmt->fetchColumn();
+$total_pages = ceil($total_plans / $limit);
+
+$stmt = $pdo->prepare("SELECT * FROM data_plans ORDER BY network, price LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $data_plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -100,6 +113,13 @@ $data_plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </tbody>
             </table>
         </div>
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                    <li class="page-item <?php if ($i == $page) echo 'active'; ?>"><a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a></li>
+                <?php endfor; ?>
+            </ul>
+        </nav>
     </div>
 </div>
 

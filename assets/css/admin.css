@@ -71,7 +71,7 @@ body {
 
 #sidebar.collapsed ul li a {
     padding: 15px 10px;
-    text-align: center;
+    text-align: left; /* Changed from center */
 }
 
 #sidebar.collapsed ul li a .link-text {
@@ -221,4 +221,19 @@ body {
 .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Excel-like Table Styling */
+.table-excel {
+    border: 1px solid #dee2e6;
+}
+.table-excel th,
+.table-excel td {
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+.table-excel .thead-dark th {
+    background-color: #343a40;
+    color: #fff;
+    border-color: #454d55;
 }

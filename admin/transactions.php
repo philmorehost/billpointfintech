@@ -1,74 +1,70 @@
 <?php
-include 'header.php';
+require_once 'header.php';
 
 $pdo = db_connect();
 
-// Handle search query
-$search_term = $_GET['search'] ?? '';
-$query = "SELECT t.*, u.email FROM transactions t JOIN users u ON t.user_id = u.id";
-$params = [];
-
-if (!empty($search_term)) {
-    $query .= " WHERE u.email LIKE ? OR t.service LIKE ? OR t.reference LIKE ?";
-    $params = ["%$search_term%", "%$search_term%", "%$search_term%"];
+// Handle search
+$search = $_GET['search'] ?? '';
+$sql = "SELECT t.*, u.email FROM transactions t JOIN users u ON t.user_id = u.id";
+if (!empty($search)) {
+    $sql .= " WHERE u.email LIKE :search OR t.description LIKE :search OR t.type LIKE :search OR t.reference LIKE :search";
 }
+$sql .= " ORDER BY t.transaction_date DESC";
 
-$query .= " ORDER BY t.created_at DESC LIMIT 100"; // Limit to 100 for performance
-
-$stmt = $pdo->prepare($query);
-$stmt->execute($params);
+$stmt = $pdo->prepare($sql);
+if (!empty($search)) {
+    $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+}
+$stmt->execute();
 $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
+<div class="container-fluid">
+    <h1>All Transactions</h1>
+    <p>Here you can view and search for all transactions in the system.</p>
 
-<h2>Transaction History</h2>
-
-<div class="search-bar">
-    <form method="get">
-        <input type="text" name="search" placeholder="Search by email, service, or reference..." value="<?php echo htmlspecialchars($search_term); ?>">
-        <button type="submit">Search</button>
+    <form action="transactions.php" method="GET" class="form-inline mb-3">
+        <input type="text" name="search" class="form-control mr-sm-2" placeholder="Search by email, ref, etc..." value="<?php echo htmlspecialchars($search); ?>">
+        <button type="submit" class="btn btn-primary">Search</button>
     </form>
-</div>
 
-<div class="table-responsive">
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>User</th>
-                <th>Service</th>
-                <th>Description</th>
-                <th>Amount (₦)</th>
-                <th>Status</th>
-                <th>Reference</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($transactions)): ?>
+    <div class="table-wrapper">
+        <table class="table table-bordered table-excel">
+            <thead class="thead-dark">
                 <tr>
-                    <td colspan="7">No transactions found.</td>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Reference</th>
+                    <th>Date</th>
                 </tr>
-            <?php else: ?>
-                <?php foreach ($transactions as $tx): ?>
+            </thead>
+            <tbody>
+                <?php if (count($transactions) > 0): ?>
+                    <?php foreach ($transactions as $transaction): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($transaction['id']); ?></td>
+                            <td><?php echo htmlspecialchars($transaction['email']); ?></td>
+                            <td><?php echo htmlspecialchars(ucfirst($transaction['type'])); ?></td>
+                            <td><?php echo htmlspecialchars($transaction['description']); ?></td>
+                            <td>&#8358;<?php echo htmlspecialchars(number_format($transaction['amount'], 2)); ?></td>
+                            <td><span class="badge badge-<?php echo htmlspecialchars($transaction['status']); ?>"><?php echo htmlspecialchars(ucfirst($transaction['status'])); ?></span></td>
+                            <td><?php echo htmlspecialchars($transaction['reference']); ?></td>
+                            <td><?php echo date("d M, Y g:ia", strtotime($transaction['transaction_date'])); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
                     <tr>
-                        <td><?php echo htmlspecialchars(date('M j, Y H:i', strtotime($tx['created_at']))); ?></td>
-                        <td><?php echo htmlspecialchars($tx['email']); ?></td>
-                        <td><?php echo htmlspecialchars($tx['service']); ?></td>
-                        <td><?php echo htmlspecialchars($tx['description']); ?></td>
-                        <td><?php echo htmlspecialchars(number_format($tx['amount'], 2)); ?></td>
-                        <td><span class="badge badge-<?php echo htmlspecialchars($tx['status']); ?>"><?php echo htmlspecialchars(ucfirst($tx['status'])); ?></span></td>
-                        <td><?php echo htmlspecialchars($tx['reference']); ?></td>
+                        <td colspan="8" class="text-center">No transactions found.</td>
                     </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<style>
-.search-bar { margin-bottom: 20px; }
-.search-bar input { padding: 10px; width: 300px; }
-.search-bar button { padding: 10px; }
-</style>
-
-<?php include 'footer.php'; ?>
+<?php
+require_once 'footer.php';
+?>
