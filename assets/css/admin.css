@@ -216,3 +216,9 @@ body {
         opacity: 1;
     }
 }
+
+/* Table Responsiveness */
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}

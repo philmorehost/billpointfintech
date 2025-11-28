@@ -1,4 +1,5 @@
 <?php
+require_once '../core/config.php';
 require_once '../core/functions.php';
 require_once '../core/vtu_api.php';
 require_once '../core/security_functions.php';

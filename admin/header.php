@@ -36,6 +36,9 @@ run_database_migrations($pdo);
                 <a href="index.php"><i class="fas fa-tachometer-alt"></i> <span class="link-text">Dashboard</span></a>
             </li>
             <li>
+                <a href="transactions.php"><i class="fas fa-exchange-alt"></i> <span class="link-text">Transactions</span></a>
+            </li>
+            <li>
                 <a href="#userSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-users"></i> <span class="link-text">Users</span></a>
                 <ul class="collapse list-unstyled" id="userSubmenu">
                     <li><a href="users.php"><span class="link-text">Manage Users</span></a></li>

@@ -1,7 +1,8 @@
 <?php
 // user/ajax_ticket_handler.php
-require_once '../core/auth_check.php';
+require_once '../core/config.php';
 require_once '../core/functions.php';
+require_once '../core/auth_check.php';
 
 header('Content-Type: application/json');
 

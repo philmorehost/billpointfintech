@@ -1,6 +1,7 @@
 <?php
-require_once '../core/auth_check.php';
+require_once '../core/config.php';
 require_once '../core/functions.php';
+require_once '../core/auth_check.php';
 
 $pdo = db_connect();
 $user_id = $_SESSION['user_id'];

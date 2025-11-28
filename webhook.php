@@ -1,5 +1,6 @@
 <?php
 // webhook.php - Handles incoming webhook events from Paystack
+require_once 'core/config.php';
 require_once 'core/functions.php';
 
 // Only respond to POST requests

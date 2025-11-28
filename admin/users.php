@@ -46,7 +46,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <div class="<?php echo htmlspecialchars($feedback['type']); ?>"><p><?php echo htmlspecialchars($feedback['message']); ?></p></div>
 <?php endif; ?>
 
-<div class="table-responsive">
+<div class="table-wrapper">
     <table class="table">
         <thead>
             <tr>
