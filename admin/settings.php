@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->beginTransaction();
         $settings_to_update = [
             'site_name' => $_POST['site_name'] ?? '',
+            'bank_transfer_fee' => $_POST['bank_transfer_fee'] ?? '0',
             'manual_bank_name' => $_POST['manual_bank_name'] ?? '',
             'manual_account_number' => $_POST['manual_account_number'] ?? '',
             'manual_account_name' => $_POST['manual_account_name'] ?? ''
@@ -57,6 +58,11 @@ $admin = $stmt->fetch(PDO::FETCH_ASSOC);
             <div class="form-group">
                 <label for="site_name">Site Name</label>
                 <input type="text" name="site_name" id="site_name" value="<?php echo htmlspecialchars($settings['site_name'] ?? 'Billpoint'); ?>" required>
+            </div>
+            <div class="form-group">
+                <label for="bank_transfer_fee">Bank Transfer Fee (₦)</label>
+                <input type="number" step="0.01" name="bank_transfer_fee" id="bank_transfer_fee" value="<?php echo htmlspecialchars($settings['bank_transfer_fee'] ?? '0.00'); ?>" required>
+                <small>Enter a fixed amount to charge for each bank transfer.</small>
             </div>
             <hr>
             <h4>Manual Deposit Account</h4>

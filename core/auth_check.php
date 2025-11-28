@@ -19,6 +19,19 @@ if (isset($_SESSION['user_id'])) {
         header('Location: login.php?message=account_suspended');
         exit;
     }
+    // --- PIN VERIFICATION LOGIC ---
+    // Get the current script name to avoid redirect loops
+    $current_page = basename($_SERVER['PHP_SELF']);
+    $allowed_pages = ['enter-pin.php', 'set-pin.php', 'logout.php'];
+
+    if (!in_array($current_page, $allowed_pages)) {
+        // If on any protected page other than the pin pages, check for pin verification
+        if (empty($_SESSION['pin_verified_at']) || (time() - $_SESSION['pin_verified_at']) > 1800) { // 30 min timeout
+            header('Location: enter-pin.php');
+            exit;
+        }
+    }
+    // --- END PIN LOGIC ---
     return;
 }
 
@@ -36,12 +49,15 @@ if (isset($_COOKIE['remember_me'])) {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && hash_equals($user['remember_token'], hash('sha256', $token)) && strtotime($user['remember_token_expiry']) > time()) {
-            // Token is valid, log the user in
+            // Token is valid, log the user in but redirect to PIN entry
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['last_activity'] = time();
 
-            // Optional: Refresh the token for better security
-            // For simplicity, we will not do this now.
+            // Unset any previous pin verification to force re-entry
+            unset($_SESSION['pin_verified_at']);
+
+            header('Location: enter-pin.php');
+            exit;
         } else {
             // Invalid token, clear the cookie
             setcookie('remember_me', '', time() - 3600, "/");

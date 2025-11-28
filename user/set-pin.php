@@ -1,32 +1,42 @@
 <?php
-require_once '../core/auth_check.php';
+require_once '../core/config.php';
 require_once '../core/functions.php';
+require_once '../core/auth_check.php'; // Ensures user is logged in
 
 $pdo = db_connect();
 $user_id = $_SESSION['user_id'];
-$feedback = ['message' => '', 'type' => ''];
 
+// Check if user already has a PIN
 $stmt = $pdo->prepare("SELECT security_pin FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
-$has_pin = $stmt->fetchColumn();
+if ($stmt->fetchColumn()) {
+    // If they already have a pin, they shouldn't be here.
+    header('Location: dashboard.php');
+    exit;
+}
 
+$errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pin = $_POST['pin'] ?? '';
-    $pin_confirm = $_POST['pin_confirm'] ?? '';
+    $confirm_pin = $_POST['confirm_pin'] ?? '';
 
-    if (!preg_match('/^\d{4}$/', $pin)) {
-        $feedback = ['message' => 'Your PIN must be exactly 4 digits.', 'type' => 'errors'];
-    } elseif ($pin !== $pin_confirm) {
-        $feedback = ['message' => 'The PINs you entered do not match.', 'type' => 'errors'];
-    } else {
-        try {
-            $hashed_pin = password_hash($pin, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET security_pin = ? WHERE id = ?");
-            $stmt->execute([$hashed_pin, $user_id]);
-            $feedback = ['message' => 'Your Security PIN has been ' . ($has_pin ? 'updated' : 'set') . ' successfully.', 'type' => 'success'];
-            $has_pin = true; // Update for current page view
-        } catch (Exception $e) {
-            $feedback = ['message' => 'An error occurred. Please try again.', 'type' => 'errors'];
+    if (!preg_match('/^[0-9]{4}$/', $pin)) {
+        $errors[] = 'Your PIN must be exactly 4 digits.';
+    } elseif ($pin !== $confirm_pin) {
+        $errors[] = 'The PINs you entered do not match.';
+    }
+
+    if (empty($errors)) {
+        $hashed_pin = password_hash($pin, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("UPDATE users SET security_pin = ? WHERE id = ?");
+        if ($stmt->execute([$hashed_pin, $user_id])) {
+            // Pin is set, now they can proceed.
+            // We'll also mark the pin as "verified" for this session.
+            $_SESSION['pin_verified_at'] = time();
+            header('Location: dashboard.php');
+            exit;
+        } else {
+            $errors[] = 'An error occurred while setting your PIN. Please try again.';
         }
     }
 }
@@ -34,27 +44,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 include '../includes/header.php';
 ?>
 
-<div class="container">
-    <h2><?php echo $has_pin ? 'Update' : 'Set'; ?> Your Security PIN</h2>
+<div class="container" style="max-width: 500px; margin-top: 50px;">
+    <h2>Set Your Security PIN</h2>
+    <p>Please set a 4-digit PIN for transaction security.</p>
 
-    <?php if ($feedback['message']): ?>
-        <div class="<?php echo htmlspecialchars($feedback['type']); ?>"><p><?php echo htmlspecialchars($feedback['message']); ?></p></div>
+    <?php if (!empty($errors)): ?>
+        <div class="errors">
+            <?php foreach ($errors as $error): ?>
+                <p><?php echo htmlspecialchars($error); ?></p>
+            <?php endforeach; ?>
+        </div>
     <?php endif; ?>
-
-    <div class="notice">
-        <p>Your 4-digit Security PIN is used to authorize sensitive transactions if you have been inactive for a while. Keep it safe.</p>
-    </div>
 
     <form method="post">
         <div class="form-group">
-            <label for="pin">Enter 4-Digit PIN</label>
-            <input type="password" name="pin" id="pin" inputmode="numeric" pattern="\d{4}" maxlength="4" required>
+            <label for="pin">New 4-Digit PIN</label>
+            <input type="password" name="pin" id="pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required>
         </div>
         <div class="form-group">
-            <label for="pin_confirm">Confirm 4-Digit PIN</label>
-            <input type="password" name="pin_confirm" id="pin_confirm" inputmode="numeric" pattern="\d{4}" maxlength="4" required>
+            <label for="confirm_pin">Confirm PIN</label>
+            <input type="password" name="confirm_pin" id="confirm_pin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required>
         </div>
-        <button type="submit" class="btn btn-primary"><?php echo $has_pin ? 'Update PIN' : 'Set PIN'; ?></button>
+        <button type="submit">Set PIN and Continue</button>
     </form>
 </div>
 

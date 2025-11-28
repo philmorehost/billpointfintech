@@ -40,10 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Email already exists.';
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare('INSERT INTO users (full_name, email, phone_number, password) VALUES (?, ?, ?, ?)');
 
             if ($stmt->execute([$full_name, $email, $phone_number, $hashed_password])) {
-                header('Location: login.php');
+                // Log the new user in immediately
+                $_SESSION['user_id'] = $pdo->lastInsertId();
+                // Redirect to set the security PIN
+                header('Location: set-pin.php');
                 exit;
             } else {
                 $errors[] = 'Something went wrong. Please try again.';

@@ -1,4 +1,5 @@
 <?php
+require_once '../core/config.php';
 require_once '../core/functions.php';
 
 // If user is already logged in, redirect to dashboard
@@ -47,7 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         setcookie('remember_me', $user['id'] . ':' . $token, time() + (86400 * 30), "/");
                     }
 
-                    header('Location: dashboard.php');
+                    // Redirect to PIN entry page instead of dashboard
+                    header('Location: enter-pin.php');
                     exit;
                 }
             } else {

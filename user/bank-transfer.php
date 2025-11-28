@@ -1,11 +1,17 @@
 <?php
-require_once '../core/auth_check.php';
+require_once '../core/config.php';
 require_once '../core/functions.php';
+require_once '../core/auth_check.php';
 require_once '../core/vtu_api.php';
 require_once '../core/security_functions.php';
 
 $pdo = db_connect();
 $user_id = $_SESSION['user_id'];
+
+// Fetch bank transfer fee from settings
+$stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'bank_transfer_fee'");
+$bank_transfer_fee = $stmt->fetchColumn() ?: 0.00;
+
 // ... (rest of the initial setup)
 $banks = [
     '044' => 'Access Bank', '023' => 'Citibank Nigeria', /* ... */ '057' => 'Zenith Bank'
@@ -34,8 +40,17 @@ include '../includes/header.php';
 <div class="container">
     <h2>Bank Transfer</h2>
     <!-- ... (error/success message display) ... -->
+    <div class="info-box">
+        <p>A fee of <strong>₦<?php echo htmlspecialchars(number_format($bank_transfer_fee, 2)); ?></strong> will be applied to this transaction.</p>
+    </div>
+
     <form id="transfer-form" action="bank-transfer.php" method="post">
         <!-- ... (form fields) ... -->
+        <div class="form-group">
+             <label for="amount">Amount (₦)</label>
+             <input type="number" id="amount" name="amount" required step="0.01">
+             <small>Total to be debited: <strong id="total-debit">₦0.00</strong></small>
+        </div>
         <button type="button" id="verify-btn">Verify Account</button>
         <button type="submit" id="transfer-btn" style="display:none;">Send Money</button>
     </form>
@@ -45,6 +60,16 @@ include '../includes/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const amountInput = document.getElementById('amount');
+    const totalDebitEl = document.getElementById('total-debit');
+    const transferFee = <?php echo json_encode((float)$bank_transfer_fee); ?>;
+
+    amountInput.addEventListener('input', function() {
+        const amount = parseFloat(this.value) || 0;
+        const total = amount + transferFee;
+        totalDebitEl.textContent = `₦${total.toFixed(2)}`;
+    });
+
     const transferForm = document.getElementById('transfer-form');
     const pinIsRequired = <?php echo json_encode($pin_is_required); ?>;
 
