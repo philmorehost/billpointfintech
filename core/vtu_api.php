@@ -189,3 +189,15 @@ function transfer_funds($enquiry_id, $bank_code, $account_number, $amount, $narr
         'narration' => $narration
     ]);
 }
+
+/**
+ * Query the status of a previous transaction
+ *
+ * @param string $api_ref The transaction reference returned by the API
+ * @return array The API response
+ */
+function query_transaction_status($api_ref) {
+    return make_api_request('query.php', [
+        'ref' => $api_ref
+    ]);
+}
