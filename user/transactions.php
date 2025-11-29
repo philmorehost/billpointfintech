@@ -41,8 +41,8 @@ include '../includes/header.php';
                         <i class="fas fa-arrow-down"></i> <!-- Placeholder Icon -->
                     </div>
                     <div class="transaction-details">
-                        <p><?php echo htmlspecialchars(ucfirst($transaction['type'])); ?> - <?php echo htmlspecialchars($transaction['description']); ?></p>
-                        <small><?php echo date("d M, Y g:ia", strtotime($transaction['transaction_date'])); ?></small>
+                        <p><?php echo htmlspecialchars(ucfirst($transaction['service'])); ?> - <?php echo htmlspecialchars($transaction['description']); ?></p>
+                        <small><?php echo date("d M, Y g:ia", strtotime($transaction['created_at'])); ?></small>
                     </div>
                     <div class="transaction-amount <?php echo $transaction['amount'] > 0 ? 'credit' : 'debit'; ?>">
                         &#8358;<?php echo htmlspecialchars(number_format(abs($transaction['amount']), 2)); ?>
@@ -55,4 +55,4 @@ include '../includes/header.php';
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?>

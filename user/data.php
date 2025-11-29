@@ -57,13 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 if (debit_wallet($user_id, $amount)) {
                     $response = buy_data($plan['network'], $phone_number, $plan['type'], $plan['quantity']);
-                    if (isset($response['status']) && $response['status'] === 'success') {
-                        update_transaction_status($transaction_id, 'success', $response['ref'], json_encode($response));
-                        $success_message = $response['response_desc'];
+                    // Ensure the response is a valid array before processing
+                    if (is_array($response) && isset($response['status']) && $response['status'] === 'success') {
+                        update_transaction_status($transaction_id, 'success', $response['ref'] ?? null, json_encode($response));
+                        $success_message = $response['response_desc'] ?? 'Data purchase successful.';
                     } else {
+                        // Refund the user if the API call failed
                         credit_wallet($user_id, $amount);
                         update_transaction_status($transaction_id, 'failed', null, json_encode($response));
-                        $errors[] = $response['desc'] ?? 'An unknown error occurred.';
+                        // Provide a clearer error message
+                        $errors[] = isset($response['desc']) ? $response['desc'] : 'The service is currently unavailable. Please try again later.';
                     }
                 } else {
                     update_transaction_status($transaction_id, 'failed', null, 'Insufficient funds');
@@ -105,7 +108,7 @@ include '../includes/header.php';
         <button type="submit">Buy Now</button>
     </form>
 </div>
-<?php include '../includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?>
 <?php if ($limit_error): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

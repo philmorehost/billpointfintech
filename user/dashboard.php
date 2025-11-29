@@ -83,4 +83,4 @@ include '../includes/header.php'; // Will be a much simpler header now
 </div>
 
 
-<?php include '../includes/footer.php'; // Will contain the new fixed nav ?>
+<?php include 'includes/footer.php'; // Will contain the new fixed nav ?>
