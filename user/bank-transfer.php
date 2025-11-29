@@ -12,10 +12,9 @@ $user_id = $_SESSION['user_id'];
 $stmt = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'bank_transfer_fee'");
 $bank_transfer_fee = $stmt->fetchColumn() ?: 0.00;
 
-// ... (rest of the initial setup)
-$banks = [
-    '044' => 'Access Bank', '023' => 'Citibank Nigeria', /* ... */ '057' => 'Zenith Bank'
-];
+$stmt = $pdo->query("SELECT * FROM banks ORDER BY name");
+$banks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 $errors = [];
 $success_message = '';
 $limit_error = null;
@@ -45,7 +44,21 @@ include '../includes/header.php';
     </div>
 
     <form id="transfer-form" action="bank-transfer.php" method="post">
-        <!-- ... (form fields) ... -->
+        <div class="form-group">
+            <label for="bank_code">Select Bank</label>
+            <select name="bank_code" id="bank_code" required>
+                <option value="">-- Select a Bank --</option>
+                <?php foreach ($banks as $bank): ?>
+                    <option value="<?php echo htmlspecialchars($bank['code']); ?>">
+                        <?php echo htmlspecialchars($bank['name']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="account_number">Account Number</label>
+            <input type="text" name="account_number" id="account_number" required>
+        </div>
         <div class="form-group">
              <label for="amount">Amount (₦)</label>
              <input type="number" id="amount" name="amount" required step="0.01">

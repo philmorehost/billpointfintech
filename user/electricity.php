@@ -10,13 +10,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $pdo = db_connect();
-// ... (rest of the initial setup)
-$electricity_providers = [
-    'ekedc' => 'Eko Electric - EKEDC',
-    'ikedc' => 'Ikeja Electric - IKEDC',
-    'aedc' => 'Abuja Electric - AEDC',
-    'phed' => 'Port Harcourt Electric - PHED'
-];
+
+$stmt = $pdo->query("SELECT * FROM electricity_discos ORDER BY name");
+$electricity_providers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 $meter_types = ['prepaid', 'postpaid'];
 $errors = [];
 $success_message = '';
@@ -83,8 +80,8 @@ include '../includes/header.php';
             <label for="provider">Select Provider</label>
             <select name="provider" id="provider" required>
                 <option value="">-- Select Provider --</option>
-                <?php foreach($electricity_providers as $code => $name): ?>
-                    <option value="<?php echo htmlspecialchars($code); ?>"><?php echo htmlspecialchars($name); ?></option>
+                <?php foreach($electricity_providers as $disco): ?>
+                    <option value="<?php echo htmlspecialchars($disco['api_code']); ?>"><?php echo htmlspecialchars($disco['name']); ?></option>
                 <?php endforeach; ?>
             </select>
         </div>

@@ -8,9 +8,9 @@ $pdo = db_connect();
 $search = $_GET['search'] ?? '';
 $sql = "SELECT * FROM transactions WHERE user_id = :user_id";
 if (!empty($search)) {
-    $sql .= " AND (description LIKE :search OR type LIKE :search)";
+    $sql .= " AND (description LIKE :search OR service LIKE :search)";
 }
-$sql .= " ORDER BY transaction_date DESC";
+$sql .= " ORDER BY created_at DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(':user_id', $_SESSION['user_id'], PDO::PARAM_INT);

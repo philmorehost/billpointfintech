@@ -56,7 +56,7 @@ include '../includes/header.php'; // Will be a much simpler header now
     <h3>Recent Activity</h3>
     <div class="transaction-list">
         <?php
-        $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY transaction_date DESC LIMIT 2");
+        $stmt = $pdo->prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 2");
         $stmt->execute([$_SESSION['user_id']]);
         $recent_transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -67,8 +67,8 @@ include '../includes/header.php'; // Will be a much simpler header now
                         <i class="fas fa-arrow-down"></i> <!-- Placeholder Icon -->
                     </div>
                     <div class="transaction-details">
-                        <p><?php echo htmlspecialchars(ucfirst($transaction['type'])); ?> - <?php echo htmlspecialchars($transaction['description']); ?></p>
-                        <small><?php echo date("d M, Y g:ia", strtotime($transaction['transaction_date'])); ?></small>
+                        <p><?php echo htmlspecialchars(ucfirst($transaction['service'])); ?> - <?php echo htmlspecialchars($transaction['description']); ?></p>
+                        <small><?php echo date("d M, Y g:ia", strtotime($transaction['created_at'])); ?></small>
                     </div>
                     <div class="transaction-amount <?php echo $transaction['amount'] > 0 ? 'credit' : 'debit'; ?>">
                         &#8358;<?php echo htmlspecialchars(number_format(abs($transaction['amount']), 2)); ?>

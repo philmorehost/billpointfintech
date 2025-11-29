@@ -50,6 +50,9 @@ run_database_migrations($pdo);
                 <a href="#productSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-box-open"></i> <span class="link-text">Products</span></a>
                 <ul class="collapse list-unstyled" id="productSubmenu">
                     <li><a href="products.php"><span class="link-text">Manage Data Plans</span></a></li>
+                    <li><a href="exam-pins.php"><span class="link-text">Manage Exam Pins</span></a></li>
+                    <li><a href="cable-packages.php"><span class="link-text">Manage Cable TV</span></a></li>
+                    <li><a href="electricity-discos.php"><span class="link-text">Manage Electricity</span></a></li>
                     <li><a href="service-manager.php"><span class="link-text">Service Discounts</span></a></li>
                     <!-- Links for Cable TV, etc., can be added here -->
                 </ul>
@@ -58,6 +61,7 @@ run_database_migrations($pdo);
                 <a href="#settingsSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-cogs"></i> <span class="link-text">Settings</span></a>
                 <ul class="collapse list-unstyled" id="settingsSubmenu">
                     <li><a href="settings.php"><span class="link-text">System Settings</span></a></li>
+                    <li><a href="bonus-settings.php"><span class="link-text">Bonus Settings</span></a></li>
                     <li><a href="gateways.php"><span class="link-text">Payment Gateways</span></a></li>
                     <li><a href="api-manager.php"><span class="link-text">API Manager</span></a></li>
                 </ul>

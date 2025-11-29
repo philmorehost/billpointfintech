@@ -19,3 +19,47 @@ INSERT INTO `networks` (`name`, `code`) VALUES
 ('Glo', 'glo'),
 ('Airtel', 'airtel'),
 ('9mobile', '9mobile');
+
+INSERT INTO `cable_tv_packages` (`provider`, `package_name`, `api_code`, `price`) VALUES
+('dstv', 'DStv Padi', 'dstv-padi', 2150.00),
+('dstv', 'DStv Yanga', 'dstv-yanga', 2950.00),
+('gotv', 'GOtv Smallie', 'gotv-smallie', 900.00),
+('gotv', 'GOtv Jinja', 'gotv-jinja', 1900.00),
+('startimes', 'StarTimes Nova', 'startimes-nova', 900.00);
+
+INSERT INTO `electricity_discos` (`name`, `api_code`) VALUES
+('Ikeja Electric', 'ikeja-electric'),
+('Eko Electric', 'eko-electric'),
+('Abuja Electric', 'abuja-electric'),
+('Kano Electric', 'kano-electric'),
+('Port Harcourt Electric', 'phed-electric');
+
+INSERT INTO `banks` (`name`, `code`) VALUES
+('Access Bank', '044'),
+('Citibank', '023'),
+('Ecobank', '050'),
+('Fidelity Bank', '070'),
+('First Bank', '011'),
+('FCMB', '214'),
+('Globus Bank', '103'),
+('GTBank', '058'),
+('Heritage Bank', '030'),
+('Jaiz Bank', '301'),
+('Keystone Bank', '082'),
+('Kuda Bank', '50211'),
+('Opay', '999991'),
+('Palmpay', '999992'),
+('Parallex Bank', '526'),
+('Polaris Bank', '076'),
+('Providus Bank', '101'),
+('Stanbic IBTC Bank', '221'),
+('Standard Chartered Bank', '068'),
+('Sterling Bank', '232'),
+('Suntrust Bank', '100'),
+('Taj Bank', '302'),
+('Titan Trust Bank', '102'),
+('Union Bank', '032'),
+('UBA', '033'),
+('Unity Bank', '215'),
+('Wema Bank', '035'),
+('Zenith Bank', '057');

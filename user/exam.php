@@ -10,12 +10,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $pdo = db_connect();
-// ... (rest of initial setup)
-$exam_types = [
-    'waec' => ['name' => 'WAEC Result Checker', 'price' => 3800],
-    'neco' => ['name' => 'NECO Result Checker', 'price' => 1400],
-    'nabteb' => ['name' => 'NABTEB Result Checker', 'price' => 950]
-];
+
+$stmt = $pdo->query("SELECT * FROM exam_products WHERE is_available = 1 ORDER BY name");
+$exam_types = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 $errors = [];
 $success_message = '';
 $limit_error = null;
@@ -25,10 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $type = $_POST['type'] ?? '';
     $quantity = (int)($_POST['quantity'] ?? 0);
 
-    if (empty($type) || !array_key_exists($type, $exam_types) || $quantity <= 0) {
+    $stmt = $pdo->prepare("SELECT * FROM exam_products WHERE api_code = ? AND is_available = 1");
+    $stmt->execute([$type]);
+    $exam_details = $stmt->fetch();
+
+    if (empty($type) || !$exam_details || $quantity <= 0) {
         $errors[] = "Invalid selection or quantity.";
     } else {
-        $exam_details = $exam_types[$type];
         $amount = $exam_details['price'] * $quantity;
 
         // --- Security & Limit Checks ---
@@ -77,9 +78,9 @@ include '../includes/header.php';
             <label for="type">Select Exam Type</label>
             <select name="type" id="type" required>
                 <option value="">-- Select Type --</option>
-                <?php foreach($exam_types as $code => $details): ?>
-                    <option value="<?php echo htmlspecialchars($code); ?>" data-price="<?php echo htmlspecialchars($details['price']); ?>">
-                        <?php echo htmlspecialchars($details['name']); ?> - ₦<?php echo htmlspecialchars($details['price']); ?>
+                <?php foreach($exam_types as $product): ?>
+                    <option value="<?php echo htmlspecialchars($product['api_code']); ?>" data-price="<?php echo htmlspecialchars($product['price']); ?>">
+                        <?php echo htmlspecialchars($product['name']); ?> - ₦<?php echo htmlspecialchars($product['price']); ?>
                     </option>
                 <?php endforeach; ?>
             </select>

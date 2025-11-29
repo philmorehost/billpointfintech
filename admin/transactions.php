@@ -7,9 +7,9 @@ $pdo = db_connect();
 $search = $_GET['search'] ?? '';
 $sql = "SELECT t.*, u.email FROM transactions t JOIN users u ON t.user_id = u.id";
 if (!empty($search)) {
-    $sql .= " WHERE u.email LIKE :search OR t.description LIKE :search OR t.type LIKE :search OR t.reference LIKE :search";
+    $sql .= " WHERE u.email LIKE :search OR t.description LIKE :search OR t.service LIKE :search OR t.reference LIKE :search";
 }
-$sql .= " ORDER BY t.transaction_date DESC";
+$sql .= " ORDER BY t.created_at DESC";
 
 $stmt = $pdo->prepare($sql);
 if (!empty($search)) {

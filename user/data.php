@@ -9,9 +9,14 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $pdo = db_connect();
-// Fetch data plans directly from the database
+// Fetch data plans and group them by network
 $stmt = $pdo->query("SELECT * FROM data_plans ORDER BY network, price");
 $data_plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$plans_by_network = [];
+foreach ($data_plans as $plan) {
+    $plans_by_network[$plan['network']][] = $plan;
+}
 
 $errors = [];
 $success_message = '';
@@ -81,10 +86,14 @@ include '../includes/header.php';
             <label for="plan_id">Select Plan</label>
             <select name="plan_id" id="plan_id" required>
                 <option value="">-- Select a Plan --</option>
-                <?php foreach ($data_plans as $p): ?>
-                    <option value="<?php echo htmlspecialchars($p['id']); ?>" data-price="<?php echo htmlspecialchars($p['price']); ?>">
-                        <?php echo htmlspecialchars(strtoupper($p['network']) . " " . $p['quantity'] . " (" . strtoupper($p['type']) . ") - ₦" . $p['price']); ?>
-                    </option>
+                <?php foreach ($plans_by_network as $network => $plans): ?>
+                    <optgroup label="<?php echo htmlspecialchars(strtoupper($network)); ?>">
+                        <?php foreach ($plans as $p): ?>
+                            <option value="<?php echo htmlspecialchars($p['id']); ?>" data-price="<?php echo htmlspecialchars($p['price']); ?>">
+                                <?php echo htmlspecialchars($p['quantity'] . " (" . strtoupper($p['type']) . ") - ₦" . $p['price']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </optgroup>
                 <?php endforeach; ?>
             </select>
         </div>

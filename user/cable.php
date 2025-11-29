@@ -9,17 +9,20 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $pdo = db_connect();
-// ... (rest of the initial setup)
-$cable_providers = [
-    'dstv' => 'DSTV',
-    'gotv' => 'GOTV',
-    'startimes' => 'Startimes'
-];
-$packages = [
-    'dstv' => ['Padi' => 4400, 'Yanga' => 6000, 'Confam' => 11000],
-    'gotv' => ['Smallie' => 1900, 'Jinja' => 3900, 'Jolli' => 5800],
-    'startimes' => ['Nova' => 1900, 'Basic' => 3700, 'Smart' => 4700]
-];
+
+$stmt = $pdo->query("SELECT * FROM cable_tv_packages ORDER BY provider, package_name");
+$all_packages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$cable_providers = [];
+$packages_by_provider = [];
+foreach ($all_packages as $pkg) {
+    $provider = $pkg['provider'];
+    if (!isset($cable_providers[$provider])) {
+        $cable_providers[$provider] = ucfirst($provider);
+    }
+    $packages_by_provider[$provider][] = $pkg;
+}
+
 $errors = [];
 $success_message = '';
 $limit_error = null;
@@ -119,5 +122,27 @@ include '../includes/header.php';
 </script>
 <?php endif; ?>
 <script>
-// Same JS as before, no changes needed for this part
+document.addEventListener('DOMContentLoaded', function() {
+    const providerSelect = document.getElementById('provider');
+    const packageSelect = document.getElementById('package');
+    const packagesByProvider = <?php echo json_encode($packages_by_provider); ?>;
+
+    providerSelect.addEventListener('change', function() {
+        const provider = this.value;
+        packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
+        packageSelect.disabled = true;
+
+        if (provider && packagesByProvider[provider]) {
+            packagesByProvider[provider].forEach(function(pkg) {
+                const option = document.createElement('option');
+                option.value = pkg.api_code;
+                option.textContent = `${pkg.package_name} - ₦${pkg.price}`;
+                packageSelect.appendChild(option);
+            });
+            packageSelect.disabled = false;
+        }
+    });
+
+    // ... (rest of the verification and form submission JS remains the same)
+});
 </script>

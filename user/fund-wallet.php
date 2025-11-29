@@ -44,7 +44,14 @@ include '../includes/header.php';
         <div class="widget">
             <h3>Automated Funding (Paystack)</h3>
             <p>Enter an amount and pay instantly with your card.</p>
-            <a href="fund-wallet-card.php" class="btn btn-primary">Pay with Card</a>
+            <form action="payment_handler.php" method="POST">
+                <input type="hidden" name="action" value="initialize_paystack">
+                <div class="form-group">
+                    <label for="paystack_amount">Amount (₦)</label>
+                    <input type="number" id="paystack_amount" name="amount" required min="100" step="0.01">
+                </div>
+                <button type="submit">Pay with Card</button>
+            </form>
         </div>
         <div class="widget">
             <h3>Manual Bank Deposit</h3>

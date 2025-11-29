@@ -1,20 +1,21 @@
 </main>
 
     <!-- Mobile Footer Navigation -->
+    <?php $currentPage = basename($_SERVER['PHP_SELF']); ?>
     <nav class="mobile-footer-nav">
-        <a href="dashboard.php" class="nav-item">
+        <a href="dashboard.php" class="nav-item <?php echo ($currentPage == 'dashboard.php') ? 'active' : ''; ?>">
             <i class="fas fa-home"></i>
             <span>Home</span>
         </a>
-        <a href="transactions.php" class="nav-item active"> <!-- 'active' class for current page -->
+        <a href="transactions.php" class="nav-item <?php echo ($currentPage == 'transactions.php') ? 'active' : ''; ?>">
             <i class="fas fa-receipt"></i>
-            <span>Transaction</span>
+            <span>Transactions</span>
         </a>
-        <a href="#" class="nav-item"> <!-- Link to be updated -->
-            <i class="fas fa-bell"></i>
-            <span>Notifications</span>
+        <a href="bonus.php" class="nav-item <?php echo ($currentPage == 'bonus.php') ? 'active' : ''; ?>">
+            <i class="fas fa-gift"></i>
+            <span>Bonus</span>
         </a>
-        <a href="profile.php" class="nav-item">
+        <a href="profile.php" class="nav-item <?php echo ($currentPage == 'profile.php') ? 'active' : ''; ?>">
             <i class="fas fa-user"></i>
             <span>Profile</span>
         </a>
