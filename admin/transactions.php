@@ -34,7 +34,7 @@ $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <tr>
                     <th>ID</th>
                     <th>User</th>
-                    <th>Type</th>
+                    <th>Service</th>
                     <th>Description</th>
                     <th>Amount</th>
                     <th>Status</th>
@@ -48,12 +48,12 @@ $transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <tr>
                             <td><?php echo htmlspecialchars($transaction['id']); ?></td>
                             <td><?php echo htmlspecialchars($transaction['email']); ?></td>
-                            <td><?php echo htmlspecialchars(ucfirst($transaction['type'])); ?></td>
+                            <td><?php echo htmlspecialchars(ucfirst($transaction['service'])); ?></td>
                             <td><?php echo htmlspecialchars($transaction['description']); ?></td>
                             <td>&#8358;<?php echo htmlspecialchars(number_format($transaction['amount'], 2)); ?></td>
                             <td><span class="badge badge-<?php echo htmlspecialchars($transaction['status']); ?>"><?php echo htmlspecialchars(ucfirst($transaction['status'])); ?></span></td>
                             <td><?php echo htmlspecialchars($transaction['reference']); ?></td>
-                            <td><?php echo date("d M, Y g:ia", strtotime($transaction['transaction_date'])); ?></td>
+                            <td><?php echo date("d M, Y g:ia", strtotime($transaction['created_at'])); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>

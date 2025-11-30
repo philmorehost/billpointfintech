@@ -1,134 +1,91 @@
 <?php
+require_once '../core/auth_check.php';
 require_once '../core/functions.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+require_once '../core/beewave_api.php';
 
 $user_id = $_SESSION['user_id'];
 $pdo = db_connect();
-$errors = [];
-$success_message = '';
+$feedback = ['message' => '', 'type' => ''];
 
-// Check if user already has a virtual account
-$stmt = $pdo->prepare("SELECT * FROM virtual_accounts WHERE user_id = ?");
+// Fetch the current user's details, including any existing virtual account info
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
-$virtual_account = $stmt->fetch(PDO::FETCH_ASSOC);
+$user = $stmt->fetch();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_account') {
-    // 1. Get user details
-    $stmt = $pdo->prepare("SELECT email, full_name, phone_number, paystack_customer_code FROM users WHERE id = ?");
-    $stmt->execute([$user_id]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+$virtual_account = null;
+if (!empty($user['beewave_va_details'])) {
+    $virtual_account = json_decode($user['beewave_va_details'], true);
+}
 
-    $customer_code = $user['paystack_customer_code'];
 
-    try {
-        // 2. Create a Paystack Customer if one doesn't exist
-        if (empty($customer_code)) {
-            $customer_response = paystack_api_request('https://api.paystack.co/customer', [
-                'email' => $user['email'],
-                'first_name' => explode(' ', $user['full_name'])[0],
-                'last_name' => explode(' ', $user['full_name'])[1] ?? '',
-                'phone' => $user['phone_number']
-            ]);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_account'])) {
+    if (!$virtual_account) {
+        $user_details = [
+            'name'  => $user['full_name'],
+            'phone' => $user['phone_number'],
+            'email' => $user['email'],
+        ];
 
-            if (!$customer_response['status']) {
-                throw new Exception("Could not create customer profile: " . ($customer_response['message'] ?? 'Unknown error'));
+        $response = generate_virtual_account($user_details);
+
+        if (isset($response['status']) && $response['status'] === true && !empty($response['virtual_accounts'])) {
+            $new_account_details = $response['virtual_accounts'][0];
+
+            try {
+                // Save the new account details to the users table
+                $stmt = $pdo->prepare("UPDATE users SET beewave_va_details = ? WHERE id = ?");
+                $stmt->execute([json_encode($new_account_details), $user_id]);
+
+                $feedback = ['message' => 'Your virtual account has been generated successfully!', 'type' => 'success'];
+                $virtual_account = $new_account_details; // Update the variable for immediate display
+
+            } catch (Exception $e) {
+                $feedback = ['message' => 'Database error: Could not save your new account details.', 'type' => 'errors'];
             }
-            $customer_code = $customer_response['data']['customer_code'];
-
-            // Save customer code to user profile
-            $stmt = $pdo->prepare("UPDATE users SET paystack_customer_code = ? WHERE id = ?");
-            $stmt->execute([$customer_code, $user_id]);
+        } else {
+            $error_message = $response['message'] ?? 'An unknown error occurred while generating your account.';
+            $feedback = ['message' => $error_message, 'type' => 'errors'];
         }
-
-        // 3. Create Dedicated Virtual Account
-        $account_response = paystack_api_request('https://api.paystack.co/dedicated_account', [
-            'customer' => $customer_code,
-            'preferred_bank' => 'wema-bank' // Or another supported bank
-        ]);
-
-        if (!$account_response['status']) {
-            throw new Exception("Could not create virtual account: " . ($account_response['message'] ?? 'Unknown error'));
-        }
-
-        $account_data = $account_response['data'];
-
-        // 4. Save account details to our database
-        $stmt = $pdo->prepare("INSERT INTO virtual_accounts (user_id, bank_name, account_number, account_name, paystack_assignment_id) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([
-            $user_id,
-            $account_data['bank']['name'],
-            $account_data['account_number'],
-            $account_data['account_name'],
-            $account_data['id']
-        ]);
-
-        $success_message = "Your dedicated account has been created successfully!";
-        // Re-fetch the account to display it
-        $stmt = $pdo->prepare("SELECT * FROM virtual_accounts WHERE user_id = ?");
-        $stmt->execute([$user_id]);
-        $virtual_account = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    } catch (Exception $e) {
-        $errors[] = "Error: " . $e->getMessage();
     }
 }
 
-// Helper function for Paystack API calls
-function paystack_api_request($url, $payload = null) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    $headers = ['Authorization: Bearer ' . PAYSTACK_SECRET_KEY, 'Content-Type: application/json'];
-
-    if ($payload) {
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-    }
-
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    $response = curl_exec($ch);
-    $err = curl_error($ch);
-    curl_close($ch);
-
-    if ($err) {
-        return ['status' => false, 'message' => 'cURL Error: ' . $err];
-    }
-
-    return json_decode($response, true);
-}
-
-
-include '../includes/header.php';
+include 'includes/header.php';
 ?>
+<style>
+.account-details-card { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 500px; margin: 20px auto; }
+.account-details-card h3 { margin-top: 0; }
+.account-details-card p { font-size: 16px; margin: 12px 0; display: flex; justify-content: space-between; }
+.btn-generate { background-color: #4f46e5; color: #fff; padding: 12px 25px; border-radius: 8px; font-size: 16px; }
+</style>
 
-<div class="container">
-    <h2>Your Virtual Account</h2>
+<div class="app-view">
+    <div class="airtime-header">
+        <a href="dashboard.php" class="back-btn">&#8592;</a>
+        <span class="title">My Virtual Account</span>
+    </div>
 
-    <?php if (!empty($errors)): ?> <div class="errors"><?php foreach ($errors as $error): ?><p><?php echo htmlspecialchars($error); ?></p><?php endforeach; ?></div> <?php endif; ?>
-    <?php if ($success_message): ?> <div class="success"><p><?php echo htmlspecialchars($success_message); ?></p></div> <?php endif; ?>
+    <div class="container">
+        <?php if ($feedback['message']): ?>
+            <div class="<?php echo htmlspecialchars($feedback['type']); ?> mb-3" style="max-width: 500px; margin: 15px auto;"><p><?php echo htmlspecialchars($feedback['message']); ?></p></div>
+        <?php endif; ?>
 
-    <?php if ($virtual_account): ?>
-        <div class="notice">
-            <p>Fund your wallet by transferring to the account details below. Your wallet will be credited automatically.</p>
+        <div class="account-details-card">
+            <?php if ($virtual_account): ?>
+                <h3>Your Account Details</h3>
+                <p><strong>Bank Name:</strong> <span><?php echo htmlspecialchars($virtual_account['bank_name']); ?></span></p>
+                <p><strong>Account Name:</strong> <span><?php echo htmlspecialchars($virtual_account['account_name']); ?></span></p>
+                <p><strong>Account Number:</strong> <span><?php echo htmlspecialchars($virtual_account['account_number']); ?></span></p>
+                <hr>
+                <p style="text-align: center; color: #555; font-size: 14px;">Fund your wallet by transferring to this account. Your wallet will be credited automatically.</p>
+            <?php else: ?>
+                <h3>Generate a Permanent Account</h3>
+                <p>Click the button below to generate a unique bank account for easy and automatic wallet funding.</p>
+                <form method="post">
+                    <button type="submit" name="generate_account" class="btn-generate">Generate My Account</button>
+                </form>
+            <?php endif; ?>
         </div>
-        <div class="account-details">
-            <p><strong>Bank Name:</strong> <?php echo htmlspecialchars($virtual_account['bank_name']); ?></p>
-            <p><strong>Account Number:</strong> <?php echo htmlspecialchars($virtual_account['account_number']); ?></p>
-            <p><strong>Account Name:</strong> <?php echo htmlspecialchars($virtual_account['account_name']); ?></p>
-        </div>
-    <?php else: ?>
-        <p>You do not have a dedicated virtual account yet.</p>
-        <p>Click the button below to generate a unique bank account for easy and automatic wallet funding.</p>
-        <form method="post">
-            <input type="hidden" name="action" value="create_account">
-            <button type="submit">Generate My Account</button>
-        </form>
-    <?php endif; ?>
+    </div>
 </div>
-<style>.account-details p { font-size: 1.2rem; margin: 10px 0; }</style>
 
-<?php include '../includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?>

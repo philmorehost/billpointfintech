@@ -36,18 +36,20 @@ include '../includes/header.php';
     <div class="transaction-list">
         <?php if (count($transactions) > 0): ?>
             <?php foreach ($transactions as $transaction): ?>
-                <div class="transaction-item">
-                    <div class="transaction-icon">
-                        <i class="fas fa-arrow-down"></i> <!-- Placeholder Icon -->
+                <a href="transaction_details.php?id=<?php echo $transaction['id']; ?>" class="transaction-item-link">
+                    <div class="transaction-item">
+                        <div class="transaction-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <p><?php echo htmlspecialchars(ucfirst($transaction['service'])); ?> - <?php echo htmlspecialchars($transaction['description']); ?></p>
+                            <small><?php echo date("d M, Y g:ia", strtotime($transaction['created_at'])); ?></small>
+                        </div>
+                        <div class="transaction-amount <?php echo $transaction['amount'] > 0 ? 'credit' : 'debit'; ?>">
+                            &#8358;<?php echo htmlspecialchars(number_format(abs($transaction['amount']), 2)); ?>
+                        </div>
                     </div>
-                    <div class="transaction-details">
-                        <p><?php echo htmlspecialchars(ucfirst($transaction['service'])); ?> - <?php echo htmlspecialchars($transaction['description']); ?></p>
-                        <small><?php echo date("d M, Y g:ia", strtotime($transaction['created_at'])); ?></small>
-                    </div>
-                    <div class="transaction-amount <?php echo $transaction['amount'] > 0 ? 'credit' : 'debit'; ?>">
-                        &#8358;<?php echo htmlspecialchars(number_format(abs($transaction['amount']), 2)); ?>
-                    </div>
-                </div>
+                </a>
             <?php endforeach; ?>
         <?php else: ?>
             <p>No transactions found.</p>

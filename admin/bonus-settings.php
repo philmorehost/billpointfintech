@@ -14,9 +14,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'bonus_conversion_rate' => $_POST['bonus_conversion_rate']
         ];
 
-        $stmt = $pdo->prepare("UPDATE settings SET setting_value = ? WHERE setting_key = ?");
+        // Use INSERT...ON DUPLICATE KEY UPDATE to handle both new and existing settings
+        $stmt = $pdo->prepare("
+            INSERT INTO settings (setting_key, setting_value)
+            VALUES (:key, :value)
+            ON DUPLICATE KEY UPDATE setting_value = :value
+        ");
+
         foreach ($settings_to_update as $key => $value) {
-            $stmt->execute([$value, $key]);
+            $stmt->execute(['key' => $key, 'value' => $value]);
         }
 
         $pdo->commit();

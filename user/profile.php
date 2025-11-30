@@ -7,88 +7,81 @@ $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-include '../includes/header.php';
+include 'includes/header.php';
 ?>
+<style>
+.profile-header { text-align: center; padding: 20px; }
+.profile-avatar { width: 80px; height: 80px; border-radius: 50%; background-color: #4f46e5; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 15px; }
+.profile-header h3 { margin: 0; font-size: 22px; }
+.profile-header p { color: #777; margin-top: 5px; }
 
-<div class="container app-view">
+.profile-menu { padding: 0 15px; }
+.profile-menu-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    text-align: left;
+    font-size: 16px;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+.profile-menu-btn:hover { background-color: #f9f9f9; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.profile-menu-btn .icon { font-size: 20px; color: #4f46e5; margin-right: 15px; width: 25px; text-align: center; }
+.profile-menu-btn .text { flex-grow: 1; }
+.profile-menu-btn .chevron { margin-left: auto; color: #aaa; }
+</style>
+
+<div class="app-view">
+    <div class="airtime-header">
+        <span class="title">My Profile</span>
+    </div>
+
     <div class="profile-header">
         <div class="profile-avatar">
             <?php echo htmlspecialchars(strtoupper(substr($user['full_name'], 0, 1))); ?>
         </div>
         <h3><?php echo htmlspecialchars($user['full_name']); ?></h3>
-        <p>@<?php echo htmlspecialchars($user['email']); // Assuming email is the username substitute ?></p>
+        <p><?php echo htmlspecialchars($user['email']); ?></p>
     </div>
 
-    <div class="settings-list">
-        <h4>General settings</h4>
-        <a href="personal-info.php" class="settings-item">
-            <div class="settings-icon"><i class="fas fa-user-circle"></i></div>
-            <div class="settings-text">
-                <h5>Personal Information</h5>
-                <p>Edit your information</p>
-            </div>
-            <i class="fas fa-chevron-right"></i>
+    <div class="profile-menu">
+        <a href="edit-information.php" class="profile-menu-btn">
+            <i class="fas fa-user-edit icon"></i>
+            <span class="text">Edit Information</span>
+            <i class="fas fa-chevron-right chevron"></i>
         </a>
-        <a href="settings.php" class="settings-item">
-            <div class="settings-icon"><i class="fas fa-cog"></i></div>
-            <div class="settings-text">
-                <h5>Settings</h5>
-                <p>Account, notifications</p>
-            </div>
-            <i class="fas fa-chevron-right"></i>
+        <a href="security.php" class="profile-menu-btn">
+            <i class="fas fa-shield-alt icon"></i>
+            <span class="text">Security</span>
+            <i class="fas fa-chevron-right chevron"></i>
         </a>
-        <a href="account-limits.php" class="settings-item">
-            <div class="settings-icon"><i class="fas fa-shield-alt"></i></div>
-            <div class="settings-text">
-                <h5>Account Limits</h5>
-                <p>Upgrade your Billpoint account</p>
-            </div>
-            <i class="fas fa-chevron-right"></i>
+        <a href="referrals.php" class="profile-menu-btn">
+            <i class="fas fa-users icon"></i>
+            <span class="text">Referrals & Commissions</span>
+            <i class="fas fa-chevron-right chevron"></i>
         </a>
-        <a href="referrals.php" class="settings-item">
-            <div class="settings-icon"><i class="fas fa-users"></i></div>
-            <div class="settings-text">
-                <h5>My Referral</h5>
-                <p>Referrals, commissions</p>
-            </div>
-            <i class="fas fa-chevron-right"></i>
+        <a href="privacy.php" class="profile-menu-btn">
+            <i class="fas fa-user-secret icon"></i>
+            <span class="text">Privacy Policy</span>
+            <i class="fas fa-chevron-right chevron"></i>
         </a>
-        <div class="settings-item">
-            <div class="settings-icon"><i class="fas fa-moon"></i></div>
-            <div class="settings-text">
-                <h5>Dark Mode</h5>
-                <p>Switch app display mode</p>
-            </div>
-            <div class="toggle-switch">
-                <input type="checkbox" id="dark-mode-toggle" />
-                <label for="dark-mode-toggle"></label>
-            </div>
-        </div>
-        <a href="support.php" class="settings-item">
-            <div class="settings-icon"><i class="fas fa-headset"></i></div>
-            <div class="settings-text">
-                <h5>Help & Support</h5>
-                <p>Help or contact our customer service</p>
-            </div>
-            <i class="fas fa-chevron-right"></i>
+        <a href="terms.php" class="profile-menu-btn">
+            <i class="fas fa-file-contract icon"></i>
+            <span class="text">Terms of Use</span>
+            <i class="fas fa-chevron-right chevron"></i>
         </a>
-        <a href="legal.php" class="settings-item">
-            <div class="settings-icon"><i class="fas fa-info-circle"></i></div>
-            <div class="settings-text">
-                <h5>Legal</h5>
-                <p>Privacy, Security & Terms of use</p>
-            </div>
-            <i class="fas fa-chevron-right"></i>
-        </a>
-        <a href="logout.php" class="settings-item">
-            <div class="settings-icon"><i class="fas fa-sign-out-alt"></i></div>
-            <div class="settings-text">
-                <h5>Log Out</h5>
-                <p>Sign Out of your account</p>
-            </div>
-            <i class="fas fa-chevron-right"></i>
+        <a href="logout.php" class="profile-menu-btn" style="color: #e54646;">
+            <i class="fas fa-sign-out-alt icon" style="color: #e54646;"></i>
+            <span class="text">Log Out</span>
+            <i class="fas fa-chevron-right chevron"></i>
         </a>
     </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+<?php include 'includes/footer.php'; ?>

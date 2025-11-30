@@ -15,15 +15,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $pdo->beginTransaction();
 
             if ($action === 'approve') {
+                // Credit the user's wallet
                 credit_wallet($user_id, $amount);
+
+                // Update the notification status
                 $stmt = $pdo->prepare("UPDATE deposit_notifications SET status = 'approved', reviewed_at = NOW() WHERE id = ?");
                 $stmt->execute([$notification_id]);
-                // Log this as a successful transaction for the user's history
-                create_transaction($user_id, 'Manual Deposit', 'Wallet funding approved by admin', $amount, 'success', 'manual_'.uniqid());
+
+                // Find and update the corresponding transaction
+                $description_like = "Manual deposit notification. Ref: " . $notification_id;
+                $stmt = $pdo->prepare("UPDATE transactions SET status = 'success' WHERE user_id = ? AND description = ? AND status = 'pending'");
+                $stmt->execute([$user_id, $description_like]);
+
                 $feedback = ['message' => 'Deposit approved and user wallet has been credited.', 'type' => 'success'];
+
             } elseif ($action === 'reject') {
+                // Update the notification status
                 $stmt = $pdo->prepare("UPDATE deposit_notifications SET status = 'rejected', reviewed_at = NOW() WHERE id = ?");
                 $stmt->execute([$notification_id]);
+
+                // Find and update the corresponding transaction to 'failed'
+                $description_like = "Manual deposit notification. Ref: " . $notification_id;
+                $stmt = $pdo->prepare("UPDATE transactions SET status = 'failed' WHERE user_id = ? AND description = ? AND status = 'pending'");
+                $stmt->execute([$user_id, $description_like]);
+
                 $feedback = ['message' => 'Deposit notification has been rejected.', 'type' => 'success'];
             }
 
