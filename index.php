@@ -1,75 +1,95 @@
 <?php
-// index.php - Main entry point
-
-// Check for installation lock file
 if (!file_exists('installed.lock')) {
     header('Location: install.php');
     exit();
 }
-
-// Include configuration
+session_start();
+$page_title = 'Welcome to Billpoint';
+// We don't need a full bootstrap here, just the config for the phone number
 require_once 'includes/config.php';
-
-// --- Public Landing Page ---
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Billpoint - Global Payments, Local Services</title>
+    <title><?php echo $page_title; ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* Landing page specific styles */
+        body { padding-top: 80px; padding-bottom: 0; }
+        .landing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .hero h1 { font-size: 48px; }
+        .hero-visual { margin-top: 40px; max-width: 400px; }
+        .trust-section {
+            text-align: center;
+            padding: 60px 20px;
+            background: #f9f9f9;
+        }
+        .trust-logos { display: flex; justify-content: center; align-items: center; gap: 40px; margin-top: 20px; }
+        .trust-logos img { height: 40px; opacity: 0.7; }
+        .landing-footer { text-align: center; padding: 20px; font-size: 14px; color: #888; }
+        .whatsapp-float {
+            position: fixed; bottom: 30px; right: 30px;
+            background-color: #25D366; color: white;
+            width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px; text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+    </style>
 </head>
 <body>
-
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="logo">Billpoint</div>
-            <nav class="nav">
-                <a href="#">Login</a>
-                <a href="#" class="btn btn-primary">Sign Up</a>
-            </nav>
+    <header class="landing-header">
+        <div class="logo">
+            <a href="index.php" style="color: var(--primary-color); text-decoration: none; font-weight: bold; font-size: 24px;">Billpoint</a>
         </div>
+        <nav>
+            <a href="login.php" class="btn btn-secondary">Login</a>
+            <a href="signup.php" class="btn btn-primary">Sign Up</a>
+        </nav>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <h1>Global Payments, Local Services</h1>
-            <p>Secure, fast, and reliable. Your all-in-one fintech solution.</p>
-            <div class="hero-image">
-                <!-- Placeholder for Mobile-App UI image -->
-                <img src="https://via.placeholder.com/600x400" alt="Mobile App UI">
+    <main>
+        <section class="hero">
+            <h1>Global Payments, Local Services, Total Security.</h1>
+            <p>Your one-stop platform for seamless financial transactions, from local bill payments to international transfers.</p>
+            <img src="https://via.placeholder.com/400x600.png?text=Mobile+App+UI" alt="Mobile App UI" class="hero-visual">
+        </section>
+
+        <section class="trust-section">
+            <h2>Trusted By The Best</h2>
+            <div class="trust-logos">
+                <img src="https://via.placeholder.com/150x40.png?text=Monnify" alt="Monnify">
+                <img src="https://via.placeholder.com/150x40.png?text=Flutterwave" alt="Flutterwave">
+                <img src="https://via.placeholder.com/150x40.png?text=Paystack" alt="Paystack">
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
-    <!-- Trust Indicators -->
-    <section class="trust-indicators">
-        <div class="container">
-            <h3>Trusted by the best</h3>
-            <!-- Placeholder logos -->
-            <img src="https://via.placeholder.com/100x40" alt="Monnify">
-            <img src="https://via.placeholder.com/100x40" alt="Flutterwave">
-            <img src="https://via.placeholder.com/100x40" alt="Paystack">
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; <?php echo date('Y'); ?> Billpoint. All rights reserved.</p>
-            <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
-        </div>
+    <footer class="landing-footer">
+        <p>&copy; <?php echo date('Y'); ?> Billpoint. All rights reserved.</p>
+        <p><a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a></p>
     </footer>
 
-    <!-- WhatsApp Floating Button -->
     <a href="https://wa.me/<?php echo ADMIN_PHONE; ?>" class="whatsapp-float" target="_blank">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.894 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.371-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.5-.669-.51-.177-.002-.372-.002-.57 0-.198 0-.521.074-.792.372-.272.296-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.626.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-        </svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M19.05 4.94A9.99 9.99 0 0 0 12 2C6.477 2 2 6.477 2 12c0 1.742.446 3.383 1.238 4.805L2 22l5.195-1.238A9.956 9.956 0 0 0 12 22c5.523 0 10-4.477 10-10c0-2.764-1.125-5.267-2.95-7.06zM12 20.15a8.125 8.125 0 0 1-4.14-1.18l-.297-.177l-3.085.735l.75-3.02l-.194-.31a8.15 8.15 0 0 1-1.214-4.348C3.82 7.57 7.57 3.82 12 3.82c2.14 0 4.1.84 5.58 2.31c1.47 1.48 2.31 3.44 2.31 5.58c0 4.43-3.75 8.17-8.17 8.17zm3.83-5.33c-.153-.076-1.004-.496-1.16-.552c-.155-.056-.268-.076-.38.076c-.113.153-.438.552-.537.66c-.1.11-.198.12-.354.034c-.156-.086-.66-.243-1.256-.775c-.465-.415-.78-.925-.873-1.08c-.093-.155-.01-.238.066-.314c-.316-.757.156-1.4.312-1.89c.112-.34.198-.447.032-.552c-.168-.105-.354-.11-.47-.11s-.41.056-.624.28c-.214.223-.552.68-.472 1.354c.08.673.552 1.57.628 1.676c.076.105 1.044 1.74 2.53 2.38c.35.15.58.206.78.263c.4.11.685.093.94-.076c.297-.19.438-.52.494-.66c.056-.14.056-.263-.01-.34zm-9.01-1.28c-.153-.076-.847-.496-.957-.552c-.11-.056-.19-.076-.268.076c-.076.153-.354.552-.41.66c-.056.11-.113.12-.268.034c-.156-.086-.552-.243-.98-.775c-.465-.415-.624-.925-.717-1.08c-.093-.155.01-.238.076-.314c.066-.076.153-.19.23-.268c.076-.076.113-.153.153-.25c.038-.11.02-.19-.01-.268c-.03-.076-.268-.32-.354-.438c-.086-.113-.17-.11-.268-.11s-.19.01-.283.034c-.093.024-.268.153-.354.34c-.086.19-.23.496-.153.94c.076.447.41.925.47 1.02c.06.105.78 1.74 2.274 2.38c.35.15.58.206.78.263c.4.11.685.093.94-.076c.297-.19.354-.52.41-.66c.056-.14.056-.263-.01-.34z"/></svg>
     </a>
-
 </body>
 </html>
