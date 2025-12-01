@@ -254,3 +254,31 @@ CREATE TABLE `invoice_items` (
   PRIMARY KEY (`id`),
   FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Loans System Tables
+CREATE TABLE `loans` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `amount_requested` decimal(20,4) NOT NULL,
+  `amount_approved` decimal(20,4) DEFAULT NULL,
+  `amount_repaid` decimal(20,4) NOT NULL DEFAULT '0.0000',
+  `interest_rate` decimal(5,2) NOT NULL DEFAULT '5.00', -- Example: 5%
+  `status` enum('pending','active','repaid','rejected','defaulted') NOT NULL DEFAULT 'pending',
+  `repayment_due_date` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `approved_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `loan_repayments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `loan_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `amount` decimal(20,4) NOT NULL,
+  `status` enum('successful','failed') NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`loan_id`) REFERENCES `loans` (`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

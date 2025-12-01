@@ -2,6 +2,7 @@
     <a href="dashboard.php">Home</a>
     <a href="invoices.php">Invoices</a>
     <a href="savings.php">Savings</a>
+    <a href="loans.php">Loans</a>
     <a href="wallet.php">Wallet</a>
     <a href="exchange.php">Exchange</a>
     <a href="history.php">History</a>

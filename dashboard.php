@@ -31,7 +31,7 @@ $balance = $stmt->fetchColumn();
         <a href="electricity.php" class="service-item">Electricity</a>
         <a href="p2p_transfer.php" class="service-item">Transfer</a>
         <a href="savings.php" class="service-item">Savings</a>
-        <a href="invoices.php" class="service-item">Invoicing</a>
+        <a href="loans.php" class="service-item">Loans</a>
         <button type="button" class="service-item more-btn" onclick="openServicesModal()">More</button>
     </div>
 </div>
@@ -51,6 +51,7 @@ $balance = $stmt->fetchColumn();
             <a href="p2p_transfer.php" class="service-item">Transfer</a>
             <a href="savings.php" class="service-item">Savings</a>
             <a href="invoices.php" class="service-item">Invoicing</a>
+            <a href="loans.php" class="service-item">Loans</a>
             <a href="exam.php" class="service-item">Exam PINs</a>
             <a href="exchange.php" class="service-item">Exchange</a>
             <a href="global_transfer.php" class="service-item">Global Transfer</a>
