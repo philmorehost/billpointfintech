@@ -45,6 +45,8 @@ $balance = $stmt->fetchColumn();
         </div>
         <div class="modal-body">
             <a href="airtime.php" class="service-item">Airtime</a>
+            <a href="international_airtime.php" class="service-item">Int'l Airtime</a>
+            <a href="bulk_vtu.php" class="service-item">Bulk VTU</a>
             <a href="data.php" class="service-item">Data</a>
             <a href="cable.php" class="service-item">Cable TV</a>
             <a href="electricity.php" class="service-item">Electricity</a>

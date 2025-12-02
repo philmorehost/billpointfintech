@@ -33,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $juicyway_secret_key = $_POST['juicyway_secret_key'] ?? '';
         $flutterwave_api_key = $_POST['flutterwave_api_key'] ?? '';
         $flutterwave_secret_key = $_POST['flutterwave_secret_key'] ?? '';
+        $reloadly_client_id = $_POST['reloadly_client_id'] ?? '';
+        $reloadly_client_secret = $_POST['reloadly_client_secret'] ?? '';
 
         $dg_success = save_setting($pdo, 'datagifting_api_key', $datagifting_key);
         $ps_success = save_setting($pdo, 'paystack_secret_key', $paystack_key);
@@ -42,8 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $jw_secret_success = save_setting($pdo, 'juicyway_secret_key', $juicyway_secret_key);
         $fw_api_success = save_setting($pdo, 'flutterwave_api_key', $flutterwave_api_key);
         $fw_secret_success = save_setting($pdo, 'flutterwave_secret_key', $flutterwave_secret_key);
+        $rl_id_success = save_setting($pdo, 'reloadly_client_id', $reloadly_client_id);
+        $rl_secret_success = save_setting($pdo, 'reloadly_client_secret', $reloadly_client_secret);
 
-        if ($dg_success && $ps_success && $mn_api_success && $mn_secret_success && $jw_api_success && $jw_secret_success && $fw_api_success && $fw_secret_success) {
+        if ($dg_success && $ps_success && $mn_api_success && $mn_secret_success && $jw_api_success && $jw_secret_success && $fw_api_success && $fw_secret_success && $rl_id_success && $rl_secret_success) {
             // Clear the settings cache
             $settings_cache_file = __DIR__ . '/../cache/settings.json';
             if (file_exists($settings_cache_file)) {
@@ -71,6 +75,8 @@ $juicyway_api_key = $settings['juicyway_api_key'] ?? '';
 $juicyway_secret_key = $settings['juicyway_secret_key'] ?? '';
 $flutterwave_api_key = $settings['flutterwave_api_key'] ?? '';
 $flutterwave_secret_key = $settings['flutterwave_secret_key'] ?? '';
+$reloadly_client_id = $settings['reloadly_client_id'] ?? '';
+$reloadly_client_secret = $settings['reloadly_client_secret'] ?? '';
 
 
 $csrf_token = generate_csrf_token();
@@ -92,7 +98,8 @@ $csrf_token = generate_csrf_token();
     <a href="p2p_transfers.php">P2P Transfers</a> |
     <a href="loans.php">Loan Management</a> |
     <a href="manual_wallet.php">Manual Wallet</a> |
-    <a href="risk_management.php">Risk Management</a>
+    <a href="risk_management.php">Risk Management</a> |
+    <a href="bulk_jobs.php">Bulk Jobs</a>
 
     <div class="admin-container">
         <h2>Settings</h2>
@@ -146,6 +153,18 @@ $csrf_token = generate_csrf_token();
              <div class="form-group">
                 <label for="flutterwave_secret_key">Flutterwave Secret Key</label>
                 <input type="password" id="flutterwave_secret_key" name="flutterwave_secret_key" value="<?php echo htmlspecialchars((string)$flutterwave_secret_key); ?>">
+            </div>
+
+            <hr>
+
+            <div class="form-group">
+                <label for="reloadly_client_id">Reloadly Client ID</label>
+                <input type="password" id="reloadly_client_id" name="reloadly_client_id" value="<?php echo htmlspecialchars((string)$reloadly_client_id); ?>">
+            </div>
+
+             <div class="form-group">
+                <label for="reloadly_client_secret">Reloadly Client Secret</label>
+                <input type="password" id="reloadly_client_secret" name="reloadly_client_secret" value="<?php echo htmlspecialchars((string)$reloadly_client_secret); ?>">
             </div>
 
             <button type="submit" class="btn">Save All Settings</button>

@@ -136,6 +136,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             break;
 
+        case 'detect_operator':
+            require_once 'includes/auth_check.php';
+            require_once 'core/reloadly_api.php';
+
+            $phone = $_POST['phone'] ?? '';
+            $country_iso = $_POST['country_iso'] ?? '';
+
+            if (empty($phone) || empty($country_iso)) {
+                echo json_encode(['status' => 'error', 'message' => 'Phone number and country are required.']);
+                exit();
+            }
+
+            $reloadly = new ReloadlyAPI($config['settings']['reloadly_client_id'] ?? null, $config['settings']['reloadly_client_secret'] ?? null);
+            $response = $reloadly->auto_detect_operator($phone, $country_iso);
+
+            // Reloadly API returns the operator object directly on success
+            if (isset($response['id'])) {
+                echo json_encode(['status' => 'success', 'operator' => $response]);
+            } else {
+                $message = $response['message'] ?? 'Could not detect operator.';
+                echo json_encode(['status' => 'error', 'message' => $message]);
+            }
+            break;
+
         case 'verify_account':
             // No auth check needed for this action
             require_once 'core/paystack_api.php';

@@ -452,4 +452,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit();
         }
     }
+
+    if ($_POST['action'] === 'international_airtime') {
+        $operator_id = $_POST['operator_id'];
+        $amount = (float)$_POST['amount'];
+        $phone = $_POST['phone_number'];
+        $country_iso = $_POST['country_iso'];
+        $pin = $_POST['pin'];
+
+        if (empty($operator_id) || $amount <= 0 || empty($phone) || empty($country_iso) || empty($pin)) {
+            set_flash_message('error', 'Invalid input for international top-up.');
+            header('Location: international_airtime.php');
+            exit();
+        }
+
+        // Verify PIN first
+        $user_stmt = $pdo->prepare("SELECT pin FROM users WHERE id = ?");
+        $user_stmt->execute([$user_id]);
+        if (!password_verify($pin, $user_stmt->fetchColumn())) {
+            set_flash_message('error', 'Incorrect PIN.');
+            header('Location: international_airtime.php');
+            exit();
+        }
+
+        // Note: Reloadly works with USD. We'll need to debit the NGN equivalent.
+        // This requires an exchange rate lookup. For simplicity, we'll assume a fixed rate for now.
+        // In a real app, this would come from JuicyWay or another FX provider.
+        $ngn_usd_rate = 1000; // Placeholder: 1 USD = 1000 NGN
+        $ngn_amount = $amount * $ngn_usd_rate;
+
+        process_transaction($pdo, $user_id, $ngn_amount, 'international_airtime', $phone, function() use ($config, $operator_id, $amount, $phone, $country_iso) {
+            require_once 'core/reloadly_api.php';
+            $reloadly = new ReloadlyAPI($config['settings']['reloadly_client_id'] ?? null, $config['settings']['reloadly_client_secret'] ?? null);
+            return $reloadly->send_topup($operator_id, $amount, $phone, $country_iso);
+        }, 'international_airtime.php');
+    }
 }
