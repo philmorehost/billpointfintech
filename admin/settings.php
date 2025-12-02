@@ -3,7 +3,7 @@ $page_title = 'Application Settings';
 require_once 'includes/header.php';
 
 // Fetch current settings
-$stmt = $pdo->query("SELECT * FROM settings");
+$stmt = $pdo->query("SELECT name, value FROM settings");
 $settings_array = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 ?>
 <div class="settings-container" style="max-width: 800px; margin: auto; background: #fff; padding: 2rem; border-radius: 1rem;">

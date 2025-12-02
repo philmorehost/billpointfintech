@@ -57,46 +57,6 @@ CREATE TABLE `settings` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Data Plans Table
-CREATE TABLE `data_plans` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `network` varchar(255) NOT NULL,
-  `type` varchar(255) NOT NULL,
-  `quantity` varchar(255) NOT NULL,
-  `price` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Cable Plans Table
-CREATE TABLE `cable_plans` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `cable_provider` varchar(255) NOT NULL,
-  `package_name` varchar(255) NOT NULL,
-  `package_code` varchar(255) NOT NULL,
-  `price` int(11) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Electricity Discos Table
-CREATE TABLE `electricity_discos` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `provider_name` varchar(255) NOT NULL,
-  `provider_code` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-INSERT INTO `electricity_discos` (`provider_name`, `provider_code`) VALUES
-('Eko Electric', 'ekedc'),
-('Ikeja Electric', 'ikedc'),
-('Abuja Electric', 'aedc'),
-('Kano Electric', 'kedco'),
-('Port Harcourt Electric', 'phed'),
-('Jos Electric', 'jedc'),
-('Ibadan Electric', 'ibedc'),
-('Kaduna Electric', 'kaedco'),
-('Enugu Electric', 'eedc'),
-('Yola Electric', 'yedc');
-
 -- Exam Products Table
 CREATE TABLE `exam_products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -287,3 +247,133 @@ INSERT INTO `services` (`name`, `url`, `icon`, `is_active`) VALUES
 ('Exam PINs', 'exam.php', NULL, 1),
 ('Recharge Card', 'recharge_card.php', NULL, 0),
 ('Bulk SMS', 'bulk_sms.php', NULL, 0);
+
+-- Gateway Fees Table
+CREATE TABLE `gateway_fees` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `gateway_name` varchar(255) NOT NULL,
+  `fee_percentage` decimal(5,2) NOT NULL DEFAULT '0.00',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `gateway_name` (`gateway_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- FX Rates Table
+CREATE TABLE `fx_rates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `currency_pair` varchar(20) NOT NULL,
+  `rate` decimal(20,8) NOT NULL,
+  `admin_markup` decimal(5,4) NOT NULL DEFAULT '0.0000',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `currency_pair` (`currency_pair`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- API Providers Table
+CREATE TABLE `api_providers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `api_key` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `api_providers` (`name`, `is_active`) VALUES
+('Datagifting', 1),
+('Clubconnect', 0),
+('Reloadly', 0);
+
+-- Airtime Pricing Table
+CREATE TABLE `airtime_pricing` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `network` varchar(255) NOT NULL,
+  `provider_id` int(11) NOT NULL,
+  `smart_earner_discount` decimal(5,2) NOT NULL DEFAULT '1.00',
+  `agent_vendor_discount` decimal(5,2) NOT NULL DEFAULT '1.00',
+  `api_vendor_discount` decimal(5,2) NOT NULL DEFAULT '1.00',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`provider_id`) REFERENCES `api_providers` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `airtime_pricing` (`network`, `provider_id`, `smart_earner_discount`, `agent_vendor_discount`, `api_vendor_discount`, `is_active`) VALUES
+('mtn', 1, 1.00, 1.00, 1.00, 1),
+('glo', 1, 1.00, 1.00, 1.00, 1),
+('airtel', 1, 1.00, 1.00, 1.00, 1),
+('9mobile', 1, 1.00, 1.00, 1.00, 1);
+
+-- Data Pricing Table
+CREATE TABLE `data_pricing` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_id` int(11) NOT NULL,
+  `network` varchar(50) NOT NULL,
+  `plan_name` varchar(255) NOT NULL,
+  `data_type` varchar(50) NOT NULL,
+  `plan_id_from_provider` varchar(100) NOT NULL,
+  `provider_price` decimal(10,2) NOT NULL,
+  `price_smart_earner` decimal(10,2) NOT NULL,
+  `price_agent` decimal(10,2) NOT NULL,
+  `price_api` decimal(10,2) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`provider_id`) REFERENCES `api_providers` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `data_pricing` (`provider_id`, `network`, `plan_name`, `data_type`, `plan_id_from_provider`, `provider_price`, `price_smart_earner`, `price_agent`, `price_api`) VALUES
+(1, 'mtn', '1GB SME', 'sme-data', '1gb', 590.00, 600.00, 590.00, 590.00),
+(1, 'mtn', '2GB SME', 'sme-data', '2gb', 1180.00, 1200.00, 1180.00, 1180.00),
+(1, 'mtn', '500MB CG', 'cg-data', '500mb', 345.00, 348.00, 345.00, 345.00),
+(1, 'glo', '500MB CG', 'cg-data', '500mb', 220.00, 250.00, 220.00, 220.00),
+(1, 'glo', '1GB CG', 'cg-data', '1gb', 420.00, 450.00, 420.00, 420.00),
+(1, 'airtel', '1GB Awoof', 'dd-data', '1gb_awoof_2days', 495.00, 500.00, 495.00, 495.00),
+(1, '9mobile', '1GB CG', 'cg-data', '1gb', 370.00, 380.00, 370.00, 370.00);
+
+-- Cable Pricing Table
+CREATE TABLE `cable_pricing` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_id` int(11) NOT NULL,
+  `cable_type` varchar(50) NOT NULL,
+  `package_name` varchar(255) NOT NULL,
+  `package_code_from_provider` varchar(100) NOT NULL,
+  `provider_price` decimal(10,2) NOT NULL,
+  `price_smart_earner` decimal(10,2) NOT NULL,
+  `price_agent` decimal(10,2) NOT NULL,
+  `price_api` decimal(10,2) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`provider_id`) REFERENCES `api_providers` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `cable_pricing` (`provider_id`, `cable_type`, `package_name`, `package_code_from_provider`, `provider_price`, `price_smart_earner`, `price_agent`, `price_api`) VALUES
+(1, 'dstv', 'Padi', 'padi', 4378.00, 4400.00, 4378.00, 4378.00),
+(1, 'dstv', 'Yanga', 'yanga', 5970.00, 6000.00, 5970.00, 5970.00),
+(1, 'gotv', 'Smallie', 'smallie', 1890.05, 1900.00, 1890.05, 1890.05),
+(1, 'gotv', 'Jinja', 'jinja', 3880.05, 3900.00, 3880.05, 3880.05),
+(1, 'startimes', 'Nova Weekly', 'nova_weekly', 594.00, 600.00, 594.00, 594.00),
+(1, 'startimes', 'Basic Weekly', 'basic_weekly', 1237.05, 1250.00, 1237.05, 1237.05);
+
+-- Electricity Pricing Table
+CREATE TABLE `electricity_pricing` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_id` int(11) NOT NULL,
+  `provider_name_display` varchar(100) NOT NULL,
+  `provider_code` varchar(50) NOT NULL,
+  `discount_smart_earner` decimal(5,2) NOT NULL DEFAULT '0.03',
+  `discount_agent` decimal(5,2) NOT NULL DEFAULT '0.05',
+  `discount_api` decimal(5,2) NOT NULL DEFAULT '0.05',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `provider_code` (`provider_code`),
+  FOREIGN KEY (`provider_id`) REFERENCES `api_providers` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `electricity_pricing` (`provider_id`, `provider_name_display`, `provider_code`, `discount_smart_earner`, `discount_agent`, `discount_api`) VALUES
+(1, 'Eko Electric', 'ekedc', 0.03, 0.05, 0.05),
+(1, 'Ikeja Electric', 'ikedc', 0.03, 0.05, 0.05),
+(1, 'Abuja Electric', 'aedc', 0.03, 0.05, 0.05),
+(1, 'Kano Electric', 'kedco', 0.03, 0.05, 0.05),
+(1, 'Port Harcourt Electric', 'phed', 0.03, 0.05, 0.05),
+(1, 'Jos Electric', 'jedc', 0.03, 0.05, 0.05),
+(1, 'Ibadan Electric', 'ibedc', 0.03, 0.05, 0.05),
+(1, 'Enugu Electric', 'eedc', 0.03, 0.05, 0.05),
+(1, 'Yola Electric', 'yedc', 0.03, 0.05, 0.05);

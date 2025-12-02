@@ -2,19 +2,43 @@
 $page_title = 'FX Rates';
 require_once 'includes/header.php';
 
-$rates = $pdo->query("SELECT * FROM fx_rates")->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $pdo->query("SELECT * FROM fx_rates");
+$rates = $stmt->fetchAll();
 ?>
-<div class="fx-rates-container" style="background: #fff; padding: 2rem; border-radius: 1rem;">
-    <form action="financial_handler.php" method="POST">
-        <?php echo generate_csrf_token_input(); ?>
-        <input type="hidden" name="action" value="update_fx_rates">
-        <?php foreach ($rates as $rate): ?>
-        <div class="form-group">
-            <label><?php echo $rate['rate_pair']; ?> Markup (%)</label>
-            <input type="text" name="rates[<?php echo $rate['id']; ?>]" value="<?php echo htmlspecialchars($rate['markup_percentage']); ?>">
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">FX Rate Control</h3>
         </div>
-        <?php endforeach; ?>
-        <button type="submit" class="btn-primary">Update Rates</button>
-    </form>
+        <div class="card-body">
+            <form action="financial_handler.php" method="POST">
+                <?php echo generate_csrf_token_input(); ?>
+                <input type="hidden" name="action" value="update_fx_rates">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Currency Pair</th>
+                            <th>Base Rate</th>
+                            <th>Admin Markup (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($rates as $rate): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($rate['currency_pair']); ?></td>
+                                <td><?php echo htmlspecialchars($rate['rate']); ?></td>
+                                <td>
+                                    <input type="number" step="0.0001" name="rates[<?php echo $rate['id']; ?>][admin_markup]" value="<?php echo htmlspecialchars($rate['admin_markup']); ?>" class="form-control">
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
 </div>
+
 <?php require_once 'includes/footer.php'; ?>
