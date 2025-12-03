@@ -7,9 +7,8 @@ if (!isset($_SESSION['admin_id'])) {
     exit;
 }
 
-// Run database migrations on every admin page load
-$pdo = db_connect();
-run_database_migrations($pdo);
+// The database should be updated manually via the update_database.php script.
+// $pdo = db_connect(); // This is not needed here as it's not used.
 
 ?>
 <!DOCTYPE html>
