@@ -6,7 +6,7 @@ $pdo = db_connect();
 // Fetch the list of banks from the database
 $banks = $pdo->query("SELECT * FROM banks ORDER BY name ASC")->fetchAll();
 
-include 'includes/header.php';
+include '../includes/header.php';
 ?>
 <style>
 /* Add styles for the verification step */
@@ -139,4 +139,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

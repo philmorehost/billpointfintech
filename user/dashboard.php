@@ -10,7 +10,7 @@ $user = $stmt->fetch(PDO::FETCH_ASSOC);
 $stmt = $pdo->query("SELECT * FROM services WHERE is_available = 1 ORDER BY name");
 $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-include 'includes/header.php';
+include '../includes/header.php';
 ?>
 <style>
     /* Responsive grid for services */
@@ -121,4 +121,4 @@ include 'includes/header.php';
 </div>
 
 
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

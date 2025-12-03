@@ -7,7 +7,7 @@ $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-include 'includes/header.php';
+include '../includes/header.php';
 ?>
 <style>
 .profile-header { text-align: center; padding: 20px; }
@@ -84,4 +84,4 @@ include 'includes/header.php';
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

@@ -37,7 +37,7 @@ $stmt = $pdo->prepare("SELECT * FROM support_tickets WHERE user_id = ? ORDER BY 
 $stmt->execute([$user_id]);
 $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-include 'includes/header.php';
+include '../includes/header.php';
 ?>
 <style>
 .support-container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
@@ -113,4 +113,4 @@ include 'includes/header.php';
     </div>
 </div>
 
-<?php include 'includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>
