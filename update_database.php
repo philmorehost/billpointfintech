@@ -163,6 +163,15 @@ try {
         echo " - Column 'beewave_va_details' already exists in 'users' table.<br>";
     }
 
+    // 9. Add 'referral_code' column to 'users' table
+    $stmt = $pdo->query("SHOW COLUMNS FROM `users` LIKE 'referral_code'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE `users` ADD `referral_code` VARCHAR(50) DEFAULT NULL UNIQUE AFTER `beewave_va_details`");
+        echo " - Column 'referral_code' added to 'users' table.<br>";
+    } else {
+        echo " - Column 'referral_code' already exists in 'users' table.<br>";
+    }
+
 
     echo "<br><strong>Database update complete! You can now delete this file.</strong>";
 

@@ -1,148 +1,128 @@
 <?php
+require_once '../core/auth_check.php';
 require_once '../core/functions.php';
-require_once '../core/vtu_api.php';
-require_once '../core/security_functions.php';
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
 
 $pdo = db_connect();
-
-$stmt = $pdo->query("SELECT * FROM cable_tv_packages ORDER BY provider, package_name");
+$stmt = $pdo->query("SELECT * FROM cable_tv_packages ORDER BY provider, price");
 $all_packages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$cable_providers = [];
 $packages_by_provider = [];
 foreach ($all_packages as $pkg) {
-    $provider = $pkg['provider'];
-    if (!isset($cable_providers[$provider])) {
-        $cable_providers[$provider] = ucfirst($provider);
-    }
-    $packages_by_provider[$provider][] = $pkg;
-}
-
-$errors = [];
-$success_message = '';
-$limit_error = null;
-$user_id = $_SESSION['user_id'];
-
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'pay') {
-    $provider = $_POST['provider'] ?? '';
-    $iuc_number = trim($_POST['iuc_number'] ?? '');
-    $package = $_POST['package'] ?? '';
-
-    $amount = $packages[$provider][ucfirst($package)] ?? 0;
-
-    // --- Security & Limit Checks ---
-    $limit_check = check_transaction_limit($pdo, $user_id, 'cable', $amount);
-    if (!$limit_check['allowed']) {
-        $limit_error = $limit_check['message'];
-    }
-
-    $blacklist_check = is_blacklisted($pdo, 'smartcard', $iuc_number);
-    if ($blacklist_check['blacklisted']) {
-        $errors[] = $blacklist_check['message'];
-    }
-    // --- End of Checks ---
-
-    if (empty($provider) || empty($iuc_number) || empty($package) || $amount <= 0) {
-        $errors[] = "Invalid selection. Please verify the details again.";
-    }
-
-    if (empty($errors) && !$limit_error) {
-        $description = "Cable TV payment: $package for $iuc_number on $provider";
-        $transaction_id = create_transaction($user_id, 'Cable TV', $description, $amount);
-
-        if (!$transaction_id) {
-            $errors[] = 'Failed to create transaction record.';
-        } else {
-            if (debit_wallet($user_id, $amount)) {
-                $response = pay_cable_bill($provider, $iuc_number, $package);
-                if (isset($response['status']) && $response['status'] === 'success') {
-                    update_transaction_status($transaction_id, 'success', $response['ref'], json_encode($response));
-                    $success_message = $response['response_desc'];
-                } else {
-                    credit_wallet($user_id, $amount);
-                    update_transaction_status($transaction_id, 'failed', null, json_encode($response));
-                    $errors[] = $response['desc'] ?? 'An unknown error occurred.';
-                }
-            } else {
-                update_transaction_status($transaction_id, 'failed', null, 'Insufficient funds');
-                $errors[] = 'Insufficient wallet balance.';
-            }
-        }
-    }
+    $packages_by_provider[$pkg['provider']][] = $pkg;
 }
 
 include '../includes/header.php';
 ?>
-<div class="container">
-    <h2>Pay Cable TV Subscription</h2>
-    <div id="response-message">
-        <?php if (!empty($errors)): ?> <div class="errors"><?php foreach ($errors as $error): ?><p><?php echo htmlspecialchars($error); ?></p><?php endforeach; ?></div> <?php endif; ?>
-        <?php if ($success_message): ?> <div class="success"><p><?php echo htmlspecialchars($success_message); ?></p></div> <?php endif; ?>
+
+<div class="app-view">
+    <div class="airtime-header">
+        <a href="dashboard.php" class="back-btn">&#8592;</a>
+        <span class="title">Cable TV</span>
     </div>
-    <form id="cable-form" action="cable.php" method="post">
-        <input type="hidden" name="action" value="pay">
-        <div class="form-group">
-            <label for="provider">Select Provider</label>
-            <select name="provider" id="provider" required>
-                <option value="">-- Select Provider --</option>
-                <?php foreach($cable_providers as $code => $name): ?>
-                    <option value="<?php echo htmlspecialchars($code); ?>"><?php echo htmlspecialchars($name); ?></option>
-                <?php endforeach; ?>
-            </select>
+
+    <div class="container">
+        <div class="form-card">
+            <div id="server-message"></div>
+
+            <!-- Step 1: Verification -->
+            <form id="verify-form">
+                <div class="form-group">
+                    <label for="provider">Provider</label>
+                    <select name="provider" id="provider" class="form-control" required>
+                        <option value="">-- Select Provider --</option>
+                        <option value="DSTV">DSTV</option>
+                        <option value="GOTV">GOtv</option>
+                        <option value="STARTIMES">StarTimes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="iuc_number">IUC / Smartcard Number</label>
+                    <input type="text" name="iuc_number" id="iuc_number" class="form-control" required>
+                </div>
+                <button type="submit" id="verify-btn" class="btn-submit">Verify</button>
+            </form>
+
+            <!-- Step 2: Payment (hidden) -->
+            <form id="pay-form" style="display:none;">
+                <div class="notice mb-3"><strong>Customer Name:</strong> <span id="customer-name"></span></div>
+                <input type="hidden" name="provider" id="pay_provider">
+                <input type="hidden" name="iuc_number" id="pay_iuc_number">
+
+                <div class="form-group">
+                    <label for="package_code">Select Package</label>
+                    <select name="package_code" id="package_code" class="form-control" required></select>
+                </div>
+                <button type="submit" id="pay-btn" class="btn-submit">Pay Now</button>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="iuc_number">IUC / Smartcard Number</label>
-            <input type="text" name="iuc_number" id="iuc_number" required>
-        </div>
-        <div class="form-group">
-            <label for="package">Select Package</label>
-            <select name="package" id="package" required disabled>
-                <option value="">-- Select provider first --</option>
-            </select>
-        </div>
-        <div id="customer-name" style="display:none; margin-bottom: 15px;" class="notice">
-            <strong>Customer Name:</strong> <span id="verified-name"></span>
-        </div>
-        <button type="button" id="verify-btn">Verify Details</button>
-        <button type="submit" id="pay-btn" style="display:none;">Pay Now</button>
-    </form>
+    </div>
 </div>
-<?php include '../includes/footer.php'; ?>
-<?php if ($limit_error): ?>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        showModal('Transaction Limit Exceeded', <?php echo json_encode($limit_error); ?>);
-    });
-</script>
-<?php endif; ?>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const providerSelect = document.getElementById('provider');
-    const packageSelect = document.getElementById('package');
+    const verifyForm = document.getElementById('verify-form');
+    const payForm = document.getElementById('pay-form');
     const packagesByProvider = <?php echo json_encode($packages_by_provider); ?>;
 
-    providerSelect.addEventListener('change', function() {
-        const provider = this.value;
-        packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
-        packageSelect.disabled = true;
+    verifyForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('verify-btn');
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
 
-        if (provider && packagesByProvider[provider]) {
-            packagesByProvider[provider].forEach(function(pkg) {
-                const option = document.createElement('option');
-                option.value = pkg.api_code;
-                option.textContent = `${pkg.package_name} - ₦${pkg.price}`;
-                packageSelect.appendChild(option);
+        const formData = new FormData(verifyForm);
+        fetch('ajax_cable_handler.php?action=verify', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    document.getElementById('customer-name').textContent = data.customer_name;
+                    document.getElementById('pay_provider').value = formData.get('provider');
+                    document.getElementById('pay_iuc_number').value = formData.get('iuc_number');
+
+                    const provider = formData.get('provider');
+                    const packageSelect = document.getElementById('package_code');
+                    packageSelect.innerHTML = '<option value="">-- Select Package --</option>';
+                    if (packagesByProvider[provider]) {
+                        packagesByProvider[provider].forEach(pkg => {
+                            packageSelect.innerHTML += `<option value="${pkg.package_code}">${pkg.package_name} - ₦${pkg.price}</option>`;
+                        });
+                    }
+
+                    verifyForm.style.display = 'none';
+                    payForm.style.display = 'block';
+                } else {
+                    document.getElementById('server-message').innerHTML = `<div class="errors"><p>${data.message}</p></div>`;
+                }
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Verify';
             });
-            packageSelect.disabled = false;
-        }
     });
 
-    // ... (rest of the verification and form submission JS remains the same)
+    payForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('pay-btn');
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+
+        const formData = new FormData(payForm);
+        fetch('ajax_cable_handler.php?action=pay', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                 document.getElementById('server-message').innerHTML = `<div class="${data.status === 'success' ? 'success' : 'errors'}"><p>${data.message}</p></div>`;
+                 if(data.status === 'success') {
+                     payForm.style.display = 'none';
+                     verifyForm.reset();
+                     verifyForm.style.display = 'block';
+                 }
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = 'Pay Now';
+            });
+    });
 });
 </script>
+
+<?php include '../includes/footer.php'; ?>
