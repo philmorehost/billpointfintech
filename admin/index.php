@@ -14,6 +14,22 @@ $latest_transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 ?>
 
+<?php
+// Check for database updates
+$latest_db_version = 2; // This should match the version in update_database.php
+$stmt_db = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'db_version'");
+$current_db_version = $stmt_db->fetchColumn() ?? 0;
+
+if ($current_db_version < $latest_db_version):
+?>
+<div class="alert alert-warning">
+    <h4><i class="fas fa-exclamation-triangle"></i> Database Update Required</h4>
+    <p>Your database schema is out of date. This can cause errors and unpredictable behavior. Please update your database to the latest version.</p>
+    <a href="../update_database.php?source=admin" class="btn btn-success">Update Database Now</a>
+</div>
+<?php endif; ?>
+
+
 <h2>Admin Dashboard</h2>
 
 <div class="dashboard-stats">

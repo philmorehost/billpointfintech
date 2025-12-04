@@ -172,10 +172,43 @@ try {
         echo " - Column 'referral_code' already exists in 'users' table.<br>";
     }
 
+    // 10. Create 'number_limits' table
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `number_limits` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `service` VARCHAR(50) NOT NULL,
+            `recipient` VARCHAR(255) NOT NULL,
+            `daily_total_amount` DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+            `last_transaction_date` DATE NOT NULL,
+            UNIQUE KEY `service_recipient` (`service`, `recipient`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ");
+    echo " - Table 'number_limits' created or already exists.<br>";
+
+    // 11. Add 'security_pin' column to 'users' table
+    $stmt = $pdo->query("SHOW COLUMNS FROM `users` LIKE 'security_pin'");
+    if ($stmt->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE `users` ADD `security_pin` VARCHAR(255) DEFAULT NULL AFTER `password`");
+        echo " - Column 'security_pin' added to 'users' table.<br>";
+    } else {
+        echo " - Column 'security_pin' already exists in 'users' table.<br>";
+    }
+
 
     echo "<br><strong>Database update complete! You can now delete this file.</strong>";
 
+    // Update the database version setting
+    $latest_version = 2; // Increment this number for future updates
+    $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('db_version', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+    $stmt->execute([$latest_version, $latest_version]);
+    echo "<br><em>Database version updated to {$latest_version}.</em>";
+
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());
+}
+
+// Optional: Add a button to redirect back to admin if run from there
+if (isset($_GET['source']) && $_GET['source'] === 'admin') {
+    echo '<br><br><a href="admin/index.php">Return to Admin Dashboard</a>';
 }
 ?>

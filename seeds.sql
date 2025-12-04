@@ -1,65 +1,100 @@
-INSERT INTO `data_plans` (`network`, `type`, `quantity`, `price`) VALUES
-('mtn', 'sme-data', '1gb', 590.00),
-('mtn', 'sme-data', '2gb', 1180.00),
-('mtn', 'sme-data', '3gb', 1770.00),
-('mtn', 'sme-data', '5gb', 2950.00),
-('mtn', 'cg-data', '500mb', 345.00),
-('mtn', 'cg-data', '1gb', 485.00);
+-- Billpoint Seed Data
+-- This file populates the database with essential data for the application to function.
 
-INSERT INTO `services` (`name`, `slug`, `icon_class`, `description`, `is_available`) VALUES
-('Buy Airtime', 'airtime', 'fa-mobile-alt', 'Purchase airtime for any network.', 1),
-('Buy Data', 'data', 'fa-wifi', 'Purchase data bundles for any network.', 1),
-('Pay Cable TV', 'cable', 'fa-tv', 'Pay your cable TV subscriptions.', 1),
-('Pay Electricity', 'electricity', 'fa-bolt', 'Pay your electricity bills.', 1),
-('Exam Pins', 'exam', 'fa-graduation-cap', 'Purchase exam pins.', 1),
-('Bank Transfer', 'bank-transfer', 'fa-paper-plane', 'Transfer money to any bank account.', 1);
-
-INSERT INTO `networks` (`name`, `code`) VALUES
-('MTN', 'mtn'),
-('Glo', 'glo'),
-('Airtel', 'airtel'),
-('9mobile', '9mobile');
-
-INSERT INTO `cable_tv_packages` (`provider`, `package_name`, `api_code`, `price`) VALUES
-('dstv', 'DStv Padi', 'dstv-padi', 2150.00),
-('dstv', 'DStv Yanga', 'dstv-yanga', 2950.00),
-('gotv', 'GOtv Smallie', 'gotv-smallie', 900.00),
-('gotv', 'GOtv Jinja', 'gotv-jinja', 1900.00),
-('startimes', 'StarTimes Nova', 'startimes-nova', 900.00);
-
-INSERT INTO `electricity_discos` (`name`, `api_code`) VALUES
-('Ikeja Electric', 'ikeja-electric'),
-('Eko Electric', 'eko-electric'),
-('Abuja Electric', 'abuja-electric'),
-('Kano Electric', 'kano-electric'),
-('Port Harcourt Electric', 'phed-electric');
+--
+-- Data for table `banks`
+--
+CREATE TABLE IF NOT EXISTS `banks` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `code` varchar(10) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `banks` (`name`, `code`) VALUES
-('Access Bank', '044'),
-('Citibank', '023'),
-('Ecobank', '050'),
-('Fidelity Bank', '070'),
-('First Bank', '011'),
-('FCMB', '214'),
-('Globus Bank', '103'),
-('GTBank', '058'),
-('Heritage Bank', '030'),
-('Jaiz Bank', '301'),
-('Keystone Bank', '082'),
-('Kuda Bank', '50211'),
-('Opay', '999991'),
-('Palmpay', '999992'),
-('Parallex Bank', '526'),
-('Polaris Bank', '076'),
-('Providus Bank', '101'),
-('Stanbic IBTC Bank', '221'),
-('Standard Chartered Bank', '068'),
-('Sterling Bank', '232'),
-('Suntrust Bank', '100'),
-('Taj Bank', '302'),
-('Titan Trust Bank', '102'),
-('Union Bank', '032'),
-('UBA', '033'),
-('Unity Bank', '215'),
-('Wema Bank', '035'),
-('Zenith Bank', '057');
+('Access Bank', '044'), ('Citibank', '023'), ('Diamond Bank', '063'),
+('Ecobank Nigeria', '050'), ('Fidelity Bank Nigeria', '070'), ('First Bank of Nigeria', '011'),
+('First City Monument Bank', '214'), ('Guaranty Trust Bank', '058'), ('Heritage Bank Plc', '030'),
+('Jaiz Bank', '301'), ('Keystone Bank Limited', '082'), ('Providus Bank Plc', '101'),
+('Polaris Bank', '076'), ('Stanbic IBTC Bank', '221'), ('Standard Chartered Bank', '068'),
+('Sterling Bank', '232'), ('Suntrust Bank', '100'), ('Union Bank of Nigeria', '032'),
+('United Bank for Africa', '033'), ('Unity Bank Plc', '215'), ('Wema Bank', '035'), ('Zenith Bank', '057');
+
+--
+-- Data for table `cable_tv_packages`
+--
+CREATE TABLE IF NOT EXISTS `cable_tv_packages` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider` varchar(50) NOT NULL,
+  `package_name` varchar(255) NOT NULL,
+  `package_code` varchar(50) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `cable_tv_packages` (`provider`, `package_name`, `package_code`, `price`) VALUES
+('DSTV', 'DStv Padi', 'DStv-Padi', 2500.00), ('DSTV', 'DStv Yanga', 'DStv-Yanga', 3500.00),
+('DSTV', 'DStv Confam', 'DStv-Confam', 6200.00), ('DSTV', 'DStv Compact', 'DStv-Compact', 10500.00),
+('GOTV', 'GOtv Smallie', 'GOtv-Smallie', 1100.00), ('GOTV', 'GOtv Jinja', 'GOtv-Jinja', 2250.00);
+
+--
+-- Data for table `electricity_discos`
+--
+CREATE TABLE IF NOT EXISTS `electricity_discos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `electricity_discos` (`name`, `code`) VALUES
+('Ikeja Electric', 'ikeja-electric'), ('Eko Electric', 'eko-electric'),
+('Kano Electric', 'kano-electric'), ('Port Harcourt Electric', 'portharcourt-electric'),
+('Jos Electric', 'jos-electric'), ('Ibadan Electric', 'ibadan-electric');
+
+--
+-- Data for table `exam_products`
+--
+CREATE TABLE IF NOT EXISTS `exam_products` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `code` varchar(50) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `exam_products` (`name`, `code`, `price`) VALUES
+('WAEC Result Checker PIN', 'WAEC', 3500.00),
+('NECO Result Token', 'NECO', 1500.00);
+
+--
+-- Data for table `data_plans`
+--
+CREATE TABLE IF NOT EXISTS `data_plans` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `network` varchar(50) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `quantity` varchar(50) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `data_plans` (`network`, `type`, `quantity`, `price`) VALUES
+('MTN', 'SME', '500MB', 150.00), ('MTN', 'SME', '1GB', 280.00),
+('GLO', 'CG', '1GB', 300.00), ('AIRTEL', 'CG', '1GB', 310.00),
+('9MOBILE', 'GIFTING', '1GB', 350.00);
+
+--
+-- Security Tables
+--
+CREATE TABLE IF NOT EXISTS `transaction_limits` ( `id` INT AUTO_INCREMENT PRIMARY KEY, `user_id` INT DEFAULT NULL, `service` VARCHAR(50) DEFAULT NULL, `limit_type` ENUM('daily', 'monthly') NOT NULL, `max_amount` DECIMAL(15, 2) NOT NULL, UNIQUE KEY `user_service_type` (`user_id`, `service`, `limit_type`) ) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS `blacklist` ( `id` INT AUTO_INCREMENT PRIMARY KEY, `identifier_type` VARCHAR(50) NOT NULL, `identifier_value` VARCHAR(255) NOT NULL, `reason` TEXT, `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY `type_value` (`identifier_type`, `identifier_value`) ) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS `number_limits` ( `id` INT AUTO_INCREMENT PRIMARY KEY, `service` VARCHAR(50) NOT NULL, `recipient` VARCHAR(255) NOT NULL, `daily_total_amount` DECIMAL(15, 2) NOT NULL DEFAULT 0.00, `last_transaction_date` DATE NOT NULL, UNIQUE KEY `service_recipient` (`service`, `recipient`) ) ENGINE=InnoDB;
+
+--
+-- Add new columns to users table
+--
+ALTER TABLE `users` ADD `bonus_balance` DECIMAL(15, 2) NOT NULL DEFAULT 0.00 AFTER `wallet_balance`;
+ALTER TABLE `users` ADD `beewave_va_details` TEXT DEFAULT NULL AFTER `bonus_balance`;
+ALTER TABLE `users` ADD `referral_code` VARCHAR(50) DEFAULT NULL UNIQUE AFTER `beewave_va_details`;
+ALTER TABLE `users` ADD `security_pin` VARCHAR(255) DEFAULT NULL AFTER `password`;
