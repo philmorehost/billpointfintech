@@ -177,11 +177,11 @@ CREATE TABLE `deposit_notifications` (
 CREATE TABLE `exam_products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
-  `api_code` varchar(50) NOT NULL,
+  `code` varchar(50) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   `is_available` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `api_code` (`api_code`)
+  UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE `bonus_transactions` (
@@ -205,7 +205,7 @@ CREATE TABLE `cable_tv_packages` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `provider` varchar(50) NOT NULL,
   `package_name` varchar(100) NOT NULL,
-  `api_code` varchar(50) NOT NULL,
+  `package_code` varchar(50) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -213,7 +213,7 @@ CREATE TABLE `cable_tv_packages` (
 CREATE TABLE `electricity_discos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
-  `api_code` varchar(50) NOT NULL,
+  `code` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
