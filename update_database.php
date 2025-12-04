@@ -2,6 +2,9 @@
 // Simple database update script
 // IMPORTANT: Make a backup of your database before running this script!
 
+if (!file_exists('core/config.php')) {
+    die("<h3>Configuration File Missing</h3><p>The file <code>core/config.php</code> was not found. Please complete the installation process by visiting <a href='install.php'>install.php</a> before attempting to run this update script.</p>");
+}
 require_once 'core/config.php';
 
 try {
