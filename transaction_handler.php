@@ -487,4 +487,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             return $reloadly->send_topup($operator_id, $amount, $phone, $country_iso);
         }, 'international_airtime.php');
     }
+
+    if ($_POST['action'] === 'request_api_key') {
+        $reason = trim($_POST['reason'] ?? '');
+        if (empty($reason)) {
+            set_flash_message('error', 'You must provide a reason for your request.');
+            header('Location: api_access.php');
+            exit();
+        }
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO api_key_requests (user_id, reason) VALUES (?, ?)");
+            $stmt->execute([$user_id, $reason]);
+            set_flash_message('success', 'Your API access request has been submitted for review.');
+        } catch (PDOException $e) {
+            set_flash_message('error', 'Could not submit your request at this time. The API system may be unavailable.');
+        }
+        header('Location: api_access.php');
+        exit();
+    }
+
+    if ($_POST['action'] === 'regenerate_api_key') {
+        try {
+            $pdo->beginTransaction();
+
+            // 1. Deactivate the old key
+            $deactivate_stmt = $pdo->prepare("UPDATE api_keys SET is_active = 0 WHERE user_id = ?");
+            $deactivate_stmt->execute([$user_id]);
+
+            // 2. Generate a new key
+            $new_api_key = 'bp_' . bin2hex(random_bytes(16)); // bp_ prefix for Billpoint
+            $insert_stmt = $pdo->prepare("INSERT INTO api_keys (user_id, api_key) VALUES (?, ?)");
+            $insert_stmt->execute([$user_id, $new_api_key]);
+
+            $pdo->commit();
+            set_flash_message('success', 'A new API key has been generated. Your old key is no longer valid.');
+
+        } catch (PDOException $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            set_flash_message('error', 'Could not regenerate the API key at this time. The API system may be unavailable.');
+        }
+        header('Location: api_access.php');
+        exit();
+    }
 }

@@ -28,8 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 throw new Exception("Loan not found or already processed.");
             }
 
+            $loan_duration_days = $config['settings']['loan_duration_days'] ?? 30;
             $amount_approved = (float)$loan['amount_requested']; // Approve the requested amount for now
-            $due_date = date('Y-m-d H:i:s', strtotime('+30 days')); // Due in 30 days
+            $due_date = date('Y-m-d H:i:s', strtotime("+{$loan_duration_days} days"));
 
             // 1. Credit user's wallet
             $credit_stmt = $pdo->prepare("UPDATE wallets SET balance = balance + ? WHERE user_id = ? AND currency = 'NGN'");

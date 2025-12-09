@@ -1,14 +1,12 @@
 <?php
 $page_title = 'Admin - Loan Management';
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
-}
 require_once '../includes/bootstrap.php';
-$csrf_token = generate_csrf_token();
+require_once '../includes/auth_check.php';
 
-// Fetch pending loans with user details
+if (!is_admin()) {
+    redirect('/dashboard.php');
+}
+
 $stmt = $pdo->query("
     SELECT l.*, u.full_name, u.email
     FROM loans l
@@ -17,26 +15,20 @@ $stmt = $pdo->query("
     ORDER BY l.created_at DESC
 ");
 $pending_loans = $stmt->fetchAll();
+
+include '../includes/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title><?php echo $page_title; ?></title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-</head>
-<body>
-    <h1>Admin - Loan Applications</h1>
-    <a href="index.php">Dashboard</a> | <a href="../logout.php">Logout</a>
+<div class="container mt-4">
+    <h1>Loan Application Management</h1>
+    <p>Review and approve or deny pending loan requests.</p>
 
-    <div class="admin-container">
-        <h2>Pending Loan Requests</h2>
-        <?php display_flash_message(); ?>
+    <?php display_flash_message(); ?>
 
+    <div class="content-box">
         <?php if (empty($pending_loans)): ?>
-            <p>There are no pending loan applications.</p>
+            <div class="alert alert-info">There are no pending loan applications.</div>
         <?php else: ?>
-            <table class="support-table">
+            <table class="table table-bordered">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -53,15 +45,15 @@ $pending_loans = $stmt->fetchAll();
                             <td>₦<?php echo number_format($loan['amount_requested'], 2); ?></td>
                             <td>
                                 <form action="loan_handler.php" method="POST" style="display:inline;">
+                                    <?php csrf_field(); ?>
                                     <input type="hidden" name="action" value="approve_loan">
                                     <input type="hidden" name="loan_id" value="<?php echo $loan['id']; ?>">
-                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                                     <button type="submit" class="btn btn-sm btn-success">Approve</button>
                                 </form>
                                 <form action="loan_handler.php" method="POST" style="display:inline;">
+                                    <?php csrf_field(); ?>
                                     <input type="hidden" name="action" value="reject_loan">
                                     <input type="hidden" name="loan_id" value="<?php echo $loan['id']; ?>">
-                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                                     <button type="submit" class="btn btn-sm btn-danger">Reject</button>
                                 </form>
                             </td>
@@ -71,5 +63,5 @@ $pending_loans = $stmt->fetchAll();
             </table>
         <?php endif; ?>
     </div>
-</body>
-</html>
+</div>
+<?php include '../includes/footer.php'; ?>

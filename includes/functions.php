@@ -21,3 +21,40 @@ function send_admin_alert($message, $subject) {
         error_log($log_message);
     }
 }
+
+/**
+ * Detects the Nigerian mobile network from a phone number.
+ *
+ * @param string $phone The phone number.
+ * @return string|null The network code (mtn, airtel, glo, 9mobile) or null if not found.
+ */
+function detect_network($phone) {
+    // Normalize the phone number by removing country code, leading +, or 0
+    if (substr($phone, 0, 4) === '+234') {
+        $phone = '0' . substr($phone, 4);
+    }
+    if (substr($phone, 0, 3) === '234') {
+        $phone = '0' . substr($phone, 3);
+    }
+
+    if (strlen($phone) < 11) {
+        return null; // Invalid length
+    }
+
+    $prefix = substr($phone, 1, 3); // Get the 3 digits after the leading '0'
+
+    $prefixes = [
+        'mtn' => ['803', '806', '810', '813', '814', '816', '703', '706', '903', '906'],
+        'airtel' => ['802', '808', '812', '701', '708', '902', '907'],
+        'glo' => ['805', '807', '811', '815', '705', '905'],
+        '9mobile' => ['809', '817', '818', '908', '909']
+    ];
+
+    foreach ($prefixes as $network => $network_prefixes) {
+        if (in_array($prefix, $network_prefixes)) {
+            return $network;
+        }
+    }
+
+    return null; // No match found
+}

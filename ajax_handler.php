@@ -127,9 +127,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $juicyway = new JuicyWayAPI($config['settings']['juicyway_api_key'] ?? null, $config['settings']['juicyway_secret_key'] ?? null);
             $response = $juicyway->get_exchange_rate($from, $to);
 
-            // Assuming a successful response structure like: { "status": true, "data": { "rate": 1.23 } }
             if (isset($response['data']['rate'])) {
-                echo json_encode(['status' => 'success', 'rate' => (float)$response['data']['rate']]);
+                $original_rate = (float)$response['data']['rate'];
+                $final_rate = $original_rate;
+
+                // Try to apply admin markup
+                try {
+                    $pair = "{$from}_{$to}";
+                    $stmt = $pdo->prepare("SELECT markup_percentage FROM fx_rates WHERE currency_pair = ?");
+                    $stmt->execute([$pair]);
+                    $markup = $stmt->fetchColumn();
+
+                    if ($markup !== false) {
+                        $markup_amount = $original_rate * ($markup / 100);
+                        $final_rate = $original_rate - $markup_amount; // We subtract because this is the rate the *user* gets
+                    }
+                } catch (PDOException $e) {
+                    // Table probably doesn't exist, log the error but continue gracefully
+                    error_log("Could not apply FX markup: " . $e->getMessage());
+                }
+
+                echo json_encode(['status' => 'success', 'rate' => $final_rate]);
             } else {
                 $message = $response['message'] ?? 'Could not retrieve exchange rate.';
                 echo json_encode(['status' => 'error', 'message' => $message]);

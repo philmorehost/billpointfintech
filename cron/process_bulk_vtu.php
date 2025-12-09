@@ -57,15 +57,16 @@ try {
         $response = null;
 
         if ($job['job_type'] === 'airtime_local') {
-            // Very basic network detection for local numbers
-            $network = 'mtn'; // Placeholder
-            $response = $datagifting->purchase_airtime($network, $phone, $amount);
+            $network = detect_network($phone);
+            if ($network) {
+                $response = $datagifting->purchase_airtime($network, $phone, $amount);
+            } else {
+                $response = ['status' => 'error', 'desc' => 'Could not detect network for this phone number.'];
+            }
         } elseif ($job['job_type'] === 'airtime_international') {
-            // International requires auto-detecting operator first
-            // For simplicity, we assume a CSV format of phone,amount,country_iso,operator_id
-            // A more robust implementation would handle this better. This is a simplified example.
-            // Let's pretend the API call happens here.
-            $response = ['status' => 'success']; // Placeholder for Reloadly
+            // This feature is not yet fully implemented.
+            // Mark the item as failed to prevent it from being stuck in pending.
+            $response = ['status' => 'error', 'desc' => 'International bulk VTU is not yet supported.'];
         }
 
         if ($response && ($response['status'] === 'success' || (isset($response['status']) && $response['status'] === 'SUCCESSFUL'))) {

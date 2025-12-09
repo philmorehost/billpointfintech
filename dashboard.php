@@ -57,6 +57,7 @@ $balance = $stmt->fetchColumn();
             <a href="exam.php" class="service-item">Exam PINs</a>
             <a href="exchange.php" class="service-item">Exchange</a>
             <a href="global_transfer.php" class="service-item">Global Transfer</a>
+            <a href="api_access.php" class="service-item">API Access</a>
         </div>
     </div>
 </div>
