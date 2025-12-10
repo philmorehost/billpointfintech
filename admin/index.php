@@ -1,188 +1,114 @@
 <?php
-session_start();
+$page_title = 'Admin Dashboard';
+require_once '../includes/admin_header.php'; // Use the new admin header
 
-// A simple check to ensure the user is an admin
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
+// --- Data Fetching for Dashboard ---
+try {
+    // Total Users
+    $total_users = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'user'")->fetchColumn();
+
+    // Pending P2P Transfers
+    $pending_p2p = $pdo->query("SELECT COUNT(*) FROM p2p_transfers WHERE status = 'pending'")->fetchColumn();
+
+    // Pending Loan Requests
+    $pending_loans = $pdo->query("SELECT COUNT(*) FROM loans WHERE status = 'pending'")->fetchColumn();
+
+    // Total Revenue (simplified example: sum of all completed transaction amounts)
+    $total_revenue = $pdo->query("SELECT SUM(amount) FROM transactions WHERE status = 'completed' AND type NOT LIKE '%credit%'")->fetchColumn();
+
+} catch (PDOException $e) {
+    // Set defaults if tables don't exist yet
+    $total_users = 0;
+    $pending_p2p = 0;
+    $pending_loans = 0;
+    $total_revenue = 0;
+    set_flash_message('error', "Could not fetch all dashboard stats. A database table might be missing.");
 }
 
-require_once '../includes/bootstrap.php';
-
-// --- Helper Function for Saving Settings ---
-function save_setting($pdo, $name, $value) {
-    $stmt = $pdo->prepare("INSERT INTO settings (name, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?");
-    return $stmt->execute([$name, $value, $value]);
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if (!validate_csrf_token()) {
-        set_flash_message('error', 'CSRF validation failed.');
-        header('Location: index.php');
-        exit();
-    }
-
-    $action = $_POST['action'];
-
-    if ($action === 'save_settings') {
-        $datagifting_key = $_POST['datagifting_api_key'] ?? '';
-        $paystack_key = $_POST['paystack_secret_key'] ?? '';
-        $monnify_api_key = $_POST['monnify_api_key'] ?? '';
-        $monnify_secret_key = $_POST['monnify_secret_key'] ?? '';
-        $juicyway_api_key = $_POST['juicyway_api_key'] ?? '';
-        $juicyway_secret_key = $_POST['juicyway_secret_key'] ?? '';
-        $flutterwave_api_key = $_POST['flutterwave_api_key'] ?? '';
-        $flutterwave_secret_key = $_POST['flutterwave_secret_key'] ?? '';
-        $reloadly_client_id = $_POST['reloadly_client_id'] ?? '';
-        $reloadly_client_secret = $_POST['reloadly_client_secret'] ?? '';
-        $loan_duration_days = $_POST['loan_duration_days'] ?? '30';
-
-        $dg_success = save_setting($pdo, 'datagifting_api_key', $datagifting_key);
-        $ps_success = save_setting($pdo, 'paystack_secret_key', $paystack_key);
-        $mn_api_success = save_setting($pdo, 'monnify_api_key', $monnify_api_key);
-        $mn_secret_success = save_setting($pdo, 'monnify_secret_key', $monnify_secret_key);
-        $jw_api_success = save_setting($pdo, 'juicyway_api_key', $juicyway_api_key);
-        $jw_secret_success = save_setting($pdo, 'juicyway_secret_key', $juicyway_secret_key);
-        $fw_api_success = save_setting($pdo, 'flutterwave_api_key', $flutterwave_api_key);
-        $fw_secret_success = save_setting($pdo, 'flutterwave_secret_key', $flutterwave_secret_key);
-        $rl_id_success = save_setting($pdo, 'reloadly_client_id', $reloadly_client_id);
-        $rl_secret_success = save_setting($pdo, 'reloadly_client_secret', $reloadly_client_secret);
-        $ld_success = save_setting($pdo, 'loan_duration_days', $loan_duration_days);
-
-        if ($dg_success && $ps_success && $mn_api_success && $mn_secret_success && $jw_api_success && $jw_secret_success && $fw_api_success && $fw_secret_success && $rl_id_success && $rl_secret_success && $ld_success) {
-            // Clear the settings cache
-            $settings_cache_file = __DIR__ . '/../cache/settings.json';
-            if (file_exists($settings_cache_file)) {
-                unlink($settings_cache_file);
-            }
-            set_flash_message('success', 'Settings saved successfully.');
-        } else {
-            set_flash_message('error', 'Failed to save one or more settings.');
+// --- Settings Form Handler ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_settings') {
+    if (validate_csrf_token()) {
+        foreach ($_POST['settings'] as $name => $value) {
+            $stmt = $pdo->prepare("INSERT INTO settings (name, value) VALUES (?, ?) ON DUPLICATE KEY UPDATE value = ?");
+            $stmt->execute([$name, $value, $value]);
         }
-
-        header('Location: index.php');
-        exit();
+        // Clear cache
+        @unlink(__DIR__ . '/../cache/settings.json');
+        set_flash_message('success', 'Settings saved successfully.');
+        redirect('index.php');
+    } else {
+        set_flash_message('error', 'CSRF validation failed.');
     }
 }
 
-// Fetch all settings at once
-$settings_stmt = $pdo->query("SELECT name, value FROM settings");
-$settings = $settings_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-
-$api_key = $settings['datagifting_api_key'] ?? '';
-$paystack_key = $settings['paystack_secret_key'] ?? '';
-$monnify_api_key = $settings['monnify_api_key'] ?? '';
-$monnify_secret_key = $settings['monnify_secret_key'] ?? '';
-$juicyway_api_key = $settings['juicyway_api_key'] ?? '';
-$juicyway_secret_key = $settings['juicyway_secret_key'] ?? '';
-$flutterwave_api_key = $settings['flutterwave_api_key'] ?? '';
-$flutterwave_secret_key = $settings['flutterwave_secret_key'] ?? '';
-$reloadly_client_id = $settings['reloadly_client_id'] ?? '';
-$reloadly_client_secret = $settings['reloadly_client_secret'] ?? '';
-$loan_duration_days = $settings['loan_duration_days'] ?? '30';
-
-
-$csrf_token = generate_csrf_token();
+// Fetch all settings for the form
+$settings = $pdo->query("SELECT name, value FROM settings")->fetchAll(PDO::FETCH_KEY_PAIR);
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Settings</title>
-    <link rel="stylesheet" href="../assets/css/style.css"> <!-- Assuming a shared stylesheet -->
-</head>
-<body>
-    <h1>Welcome to the Admin Dashboard</h1>
-    <a href="../logout.php">Logout</a> |
-    <a href="users.php">Users</a> |
-    <a href="plans.php">Service Plans</a> |
-    <a href="support.php">Support</a> |
-    <a href="p2p_transfers.php">P2P Transfers</a> |
-    <a href="loans.php">Loan Management</a> |
-    <a href="manual_wallet.php">Manual Wallet</a> |
-    <a href="risk_management.php">Risk Management</a> |
-    <a href="bulk_jobs.php">Bulk Jobs</a> |
-    <a href="fx_rates.php">FX Rates</a> |
-    <a href="api_requests.php">API Requests</a> |
-    <a href="migrations.php">Migrations</a>
 
-    <div class="admin-container">
-        <h2>Settings</h2>
-        <?php display_flash_message(); ?>
+<div class="admin-header">
+    <h1>Dashboard</h1>
+    <p>An overview of your Billpoint application.</p>
+</div>
 
-        <form action="index.php" method="POST">
-            <input type="hidden" name="action" value="save_settings">
-            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-
-            <div class="form-group">
-                <label for="datagifting_api_key">Datagifting API Key</label>
-                <input type="password" id="datagifting_api_key" name="datagifting_api_key" value="<?php echo htmlspecialchars((string)$api_key); ?>">
-            </div>
-
-            <div class="form-group">
-                <label for="paystack_secret_key">Paystack Secret Key</label>
-                <input type="password" id="paystack_secret_key" name="paystack_secret_key" value="<?php echo htmlspecialchars((string)$paystack_key); ?>">
-            </div>
-
-            <hr>
-
-            <div class="form-group">
-                <label for="monnify_api_key">Monnify API Key</label>
-                <input type="password" id="monnify_api_key" name="monnify_api_key" value="<?php echo htmlspecialchars((string)$monnify_api_key); ?>">
-            </div>
-
-             <div class="form-group">
-                <label for="monnify_secret_key">Monnify Secret Key</label>
-                <input type="password" id="monnify_secret_key" name="monnify_secret_key" value="<?php echo htmlspecialchars((string)$monnify_secret_key); ?>">
-            </div>
-
-            <hr>
-
-            <div class="form-group">
-                <label for="juicyway_api_key">JuicyWay API Key</label>
-                <input type="password" id="juicyway_api_key" name="juicyway_api_key" value="<?php echo htmlspecialchars((string)$juicyway_api_key); ?>">
-            </div>
-
-             <div class="form-group">
-                <label for="juicyway_secret_key">JuicyWay Secret Key</label>
-                <input type="password" id="juicyway_secret_key" name="juicyway_secret_key" value="<?php echo htmlspecialchars((string)$juicyway_secret_key); ?>">
-            </div>
-
-            <hr>
-
-            <div class="form-group">
-                <label for="flutterwave_api_key">Flutterwave API Key</label>
-                <input type="password" id="flutterwave_api_key" name="flutterwave_api_key" value="<?php echo htmlspecialchars((string)$flutterwave_api_key); ?>">
-            </div>
-
-             <div class="form-group">
-                <label for="flutterwave_secret_key">Flutterwave Secret Key</label>
-                <input type="password" id="flutterwave_secret_key" name="flutterwave_secret_key" value="<?php echo htmlspecialchars((string)$flutterwave_secret_key); ?>">
-            </div>
-
-            <hr>
-
-            <div class="form-group">
-                <label for="reloadly_client_id">Reloadly Client ID</label>
-                <input type="password" id="reloadly_client_id" name="reloadly_client_id" value="<?php echo htmlspecialchars((string)$reloadly_client_id); ?>">
-            </div>
-
-             <div class="form-group">
-                <label for="reloadly_client_secret">Reloadly Client Secret</label>
-                <input type="password" id="reloadly_client_secret" name="reloadly_client_secret" value="<?php echo htmlspecialchars((string)$reloadly_client_secret); ?>">
-            </div>
-
-            <hr>
-
-            <h3>Other Settings</h3>
-             <div class="form-group">
-                <label for="loan_duration_days">Loan Duration (Days)</label>
-                <input type="number" id="loan_duration_days" name="loan_duration_days" value="<?php echo htmlspecialchars((string)$loan_duration_days); ?>">
-            </div>
-
-            <button type="submit" class="btn">Save All Settings</button>
-        </form>
+<!-- Statistic Cards -->
+<div class="stat-cards">
+    <div class="stat-card">
+        <div class="title">Total Users</div>
+        <div class="value"><?php echo number_format($total_users); ?></div>
     </div>
-</body>
-</html>
+    <div class="stat-card">
+        <div class="title">Pending Approvals</div>
+        <div class="value"><?php echo number_format($pending_p2p + $pending_loans); ?></div>
+    </div>
+    <div class="stat-card">
+        <div class="title">Total Revenue (NGN)</div>
+        <div class="value small">₦<?php echo number_format($total_revenue, 2); ?></div>
+    </div>
+</div>
+
+<!-- Settings Box -->
+<div class="content-box">
+    <h2>Application Settings</h2>
+    <?php display_flash_message(); ?>
+
+    <form action="index.php" method="POST">
+        <input type="hidden" name="action" value="save_settings">
+        <?php csrf_field(); ?>
+
+        <h4>API Keys</h4>
+        <div class="form-group">
+            <label for="datagifting_api_key">Datagifting API Key</label>
+            <input type="password" class="form-control" name="settings[datagifting_api_key]" value="<?php echo htmlspecialchars($settings['datagifting_api_key'] ?? ''); ?>">
+        </div>
+        <div class="form-group">
+            <label for="paystack_secret_key">Paystack Secret Key</label>
+            <input type="password" class="form-control" name="settings[paystack_secret_key]" value="<?php echo htmlspecialchars($settings['paystack_secret_key'] ?? ''); ?>">
+        </div>
+         <div class="form-group">
+            <label for="monnify_api_key">Monnify API Key</label>
+            <input type="password" class="form-control" name="settings[monnify_api_key]" value="<?php echo htmlspecialchars($settings['monnify_api_key'] ?? ''); ?>">
+        </div>
+         <div class="form-group">
+            <label for="juicyway_api_key">JuicyWay API Key</label>
+            <input type="password" class="form-control" name="settings[juicyway_api_key]" value="<?php echo htmlspecialchars($settings['juicyway_api_key'] ?? ''); ?>">
+        </div>
+         <div class="form-group">
+            <label for="flutterwave_api_key">Flutterwave API Key</label>
+            <input type="password" class="form-control" name="settings[flutterwave_api_key]" value="<?php echo htmlspecialchars($settings['flutterwave_api_key'] ?? ''); ?>">
+        </div>
+         <div class="form-group">
+            <label for="reloadly_client_id">Reloadly Client ID</label>
+            <input type="password" class="form-control" name="settings[reloadly_client_id]" value="<?php echo htmlspecialchars($settings['reloadly_client_id'] ?? ''); ?>">
+        </div>
+
+        <h4>System Settings</h4>
+        <div class="form-group">
+            <label for="loan_duration_days">Loan Duration (Days)</label>
+            <input type="number" class="form-control" name="settings[loan_duration_days]" value="<?php echo htmlspecialchars($settings['loan_duration_days'] ?? '30'); ?>">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+    </form>
+</div>
+
+<?php require_once '../includes/admin_footer.php'; ?>

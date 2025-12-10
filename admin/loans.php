@@ -16,15 +16,17 @@ $stmt = $pdo->query("
 ");
 $pending_loans = $stmt->fetchAll();
 
-include '../includes/header.php';
+require_once '../includes/admin_header.php';
 ?>
-<div class="container mt-4">
+
+<div class="admin-header">
     <h1>Loan Application Management</h1>
     <p>Review and approve or deny pending loan requests.</p>
+</div>
 
-    <?php display_flash_message(); ?>
+<?php display_flash_message(); ?>
 
-    <div class="content-box">
+<div class="content-box">
         <?php if (empty($pending_loans)): ?>
             <div class="alert alert-info">There are no pending loan applications.</div>
         <?php else: ?>
@@ -63,5 +65,4 @@ include '../includes/header.php';
             </table>
         <?php endif; ?>
     </div>
-</div>
-<?php include '../includes/footer.php'; ?>
+<?php require_once '../includes/admin_footer.php'; ?>

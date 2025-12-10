@@ -9,17 +9,19 @@ if (!is_admin()) {
 
 $users = $pdo->query("SELECT id, full_name, email, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC")->fetchAll();
 
-include '../includes/header.php';
+require_once '../includes/admin_header.php';
 ?>
-<div class="container mt-4">
+
+<div class="admin-header">
     <h1>User Management</h1>
     <p>View and manage all registered users.</p>
+</div>
 
-    <div class="content-box">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Name</th>
+<div class="content-box">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
                     <th>Email</th>
                     <th>Registered</th>
                     <th>Action</th>
@@ -43,5 +45,4 @@ include '../includes/header.php';
             </tbody>
         </table>
     </div>
-</div>
-<?php include '../includes/footer.php'; ?>
+<?php require_once '../includes/admin_footer.php'; ?>

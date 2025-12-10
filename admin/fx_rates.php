@@ -69,13 +69,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $table_exists) {
 }
 
 $page_title = 'Manage FX Rates';
-include '../includes/header.php';
+require_once '../includes/admin_header.php';
 ?>
-<div class="container mt-4">
-    <h1>Manage FX Rate Markups</h1>
-    <p class="lead">Set the percentage markup for currency exchange rates.</p>
 
-    <?php display_flash_message(); ?>
+<div class="admin-header">
+    <h1>Manage FX Rate Markups</h1>
+    <p>Set the percentage markup for currency exchange rates.</p>
+</div>
+
+<?php display_flash_message(); ?>
 
     <?php if (!$table_exists): ?>
         <div class="alert alert-danger">
@@ -132,5 +134,4 @@ include '../includes/header.php';
             </table>
         </div>
     <?php endif; ?>
-</div>
-<?php include '../includes/footer.php'; ?>
+<?php require_once '../includes/admin_footer.php'; ?>

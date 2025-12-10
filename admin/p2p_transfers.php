@@ -1,12 +1,6 @@
 <?php
 $page_title = 'Admin - P2P Transfers';
-session_start();
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
-}
-require_once '../includes/bootstrap.php';
-$csrf_token = generate_csrf_token();
+require_once '../includes/admin_header.php'; // Use the new admin header
 
 // Fetch pending transfers with user details
 $stmt = $pdo->query("
@@ -22,61 +16,54 @@ $stmt = $pdo->query("
 ");
 $pending_transfers = $stmt->fetchAll();
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $page_title; ?></title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-</head>
-<body>
-    <h1>Admin - P2P Transfer Requests</h1>
-    <a href="index.php">Dashboard</a> | <a href="../logout.php">Logout</a>
 
-    <div class="admin-container">
-        <h2>Pending Transfers</h2>
-        <?php display_flash_message(); ?>
+<div class="admin-header">
+    <h1>P2P Transfer Requests</h1>
+    <p>Approve or reject pending user-to-user transfers.</p>
+</div>
 
-        <?php if (empty($pending_transfers)): ?>
-            <p>There are no pending P2P transfers.</p>
-        <?php else: ?>
-            <table class="support-table">
-                <thead>
+<?php display_flash_message(); ?>
+
+<div class="content-box">
+    <?php if (empty($pending_transfers)): ?>
+        <div class="alert alert-info">There are no pending P2P transfers.</div>
+    <?php else: ?>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Sender</th>
+                    <th>Recipient</th>
+                    <th>Amount (NGN)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($pending_transfers as $transfer): ?>
                     <tr>
-                        <th>Date</th>
-                        <th>Sender</th>
-                        <th>Recipient</th>
-                        <th>Amount (NGN)</th>
-                        <th>Actions</th>
+                        <td><?php echo date('M d, Y H:i', strtotime($transfer['created_at'])); ?></td>
+                        <td><?php echo htmlspecialchars($transfer['sender_name']); ?></td>
+                        <td><?php echo htmlspecialchars($transfer['recipient_name']); ?></td>
+                        <td><?php echo number_format($transfer['amount'], 2); ?></td>
+                        <td>
+                            <form action="p2p_handler.php" method="POST" style="display:inline;">
+                                <?php csrf_field(); ?>
+                                <input type="hidden" name="action" value="approve_p2p">
+                                <input type="hidden" name="transfer_id" value="<?php echo $transfer['id']; ?>">
+                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                            </form>
+                            <form action="p2p_handler.php" method="POST" style="display:inline;">
+                                <?php csrf_field(); ?>
+                                <input type="hidden" name="action" value="reject_p2p">
+                                <input type="hidden" name="transfer_id" value="<?php echo $transfer['id']; ?>">
+                                <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                            </form>
+                        </td>
                     </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($pending_transfers as $transfer): ?>
-                        <tr>
-                            <td><?php echo date('M d, Y H:i', strtotime($transfer['created_at'])); ?></td>
-                            <td><?php echo htmlspecialchars($transfer['sender_name']); ?></td>
-                            <td><?php echo htmlspecialchars($transfer['recipient_name']); ?></td>
-                            <td><?php echo number_format($transfer['amount'], 2); ?></td>
-                            <td>
-                                <form action="p2p_handler.php" method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="approve_p2p">
-                                    <input type="hidden" name="transfer_id" value="<?php echo $transfer['id']; ?>">
-                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                </form>
-                                <form action="p2p_handler.php" method="POST" style="display:inline;">
-                                    <input type="hidden" name="action" value="reject_p2p">
-                                    <input type="hidden" name="transfer_id" value="<?php echo $transfer['id']; ?>">
-                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
-    </div>
-</body>
-</html>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
+</div>
+
+<?php require_once '../includes/admin_footer.php'; ?>
