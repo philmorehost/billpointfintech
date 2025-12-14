@@ -1,0 +1,77 @@
+/* assets/css/mobile_app.css */
+:root {
+    --app-primary-color: #1a237e;
+    --app-secondary-color: #ffab40;
+    --app-bg-color: #f0f2f5;
+    --card-bg-color: #ffffff;
+    --text-color-dark: #333;
+    --text-color-light: #fefefe;
+}
+
+body.app-view {
+    background-color: var(--app-bg-color);
+    padding-bottom: 70px; /* Space for the fixed footer */
+}
+
+.top-card {
+    background: linear-gradient(135deg, var(--app-primary-color), #3f51b5);
+    color: var(--text-color-light);
+    padding: 20px;
+    margin: -20px -20px 20px -20px; /* Overcome container padding */
+    border-radius: 0 0 25px 25px;
+}
+
+.balance-display { text-align: center; margin-bottom: 20px; }
+.balance-display p { margin: 0; opacity: 0.8; }
+.balance-display h1 { margin: 5px 0; font-size: 2.5rem; }
+
+.top-actions { display: flex; justify-content: space-around; text-align: center; }
+.top-actions a { color: var(--text-color-light); text-decoration: none; }
+.top-actions .action-icon { font-size: 1.5rem; margin-bottom: 5px; }
+
+.services-grid-app { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; text-align: center; }
+.service-button { background-color: var(--card-bg-color); padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.service-button a { color: var(--text-color-dark); text-decoration: none; font-weight: 500; }
+.service-button .fas { font-size: 1.8rem; margin-bottom: 8px; color: var(--app-primary-color); }
+.service-button.more .fas { color: var(--app-secondary-color); }
+
+.footer-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background-color: var(--card-bg-color);
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+}
+.footer-nav a {
+    color: #666;
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.8rem;
+}
+.footer-nav a.active { color: var(--app-primary-color); }
+.footer-nav a .fas { font-size: 1.5rem; margin-bottom: 3px; }
+
+/* Full-screen Modal */
+.full-screen-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.95);
+    overflow-y: auto;
+    animation: fadeIn 0.3s;
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; }
+.modal-header h2 { margin: 0; }
+.modal-close { font-size: 2rem; cursor: pointer; }
+.modal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px; }
+@keyframes fadeIn { from {opacity: 0;} to {opacity: 1;} }
