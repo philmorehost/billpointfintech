@@ -1,11 +1,6 @@
 <?php
 $page_title = 'Admin - User Management';
-require_once '../includes/bootstrap.php';
-require_once '../includes/auth_check.php';
-
-if (!is_admin()) {
-    redirect('/dashboard.php');
-}
+require_once '../includes/admin_header.php';
 
 $users = $pdo->query("SELECT id, full_name, email, created_at FROM users WHERE role = 'user' ORDER BY created_at DESC")->fetchAll();
 

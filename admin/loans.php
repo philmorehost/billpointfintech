@@ -1,11 +1,6 @@
 <?php
 $page_title = 'Admin - Loan Management';
-require_once '../includes/bootstrap.php';
-require_once '../includes/auth_check.php';
-
-if (!is_admin()) {
-    redirect('/dashboard.php');
-}
+require_once '../includes/admin_header.php';
 
 $stmt = $pdo->query("
     SELECT l.*, u.full_name, u.email

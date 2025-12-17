@@ -1,11 +1,6 @@
 <?php
 $page_title = 'Admin - Bulk VTU Jobs';
-require_once '../includes/bootstrap.php';
-require_once '../includes/auth_check.php';
-
-if (!is_admin()) {
-    redirect('/dashboard.php');
-}
+require_once '../includes/admin_header.php';
 
 $jobs = $pdo->query("
     SELECT b.*, u.full_name

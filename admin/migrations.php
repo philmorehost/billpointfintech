@@ -1,10 +1,5 @@
 <?php
-require_once '../includes/bootstrap.php';
-require_once '../includes/auth_check.php';
-
-if (!is_admin()) {
-    redirect('/dashboard.php');
-}
+require_once '../includes/admin_header.php';
 
 $migrations_dir = __DIR__ . '/../migrations/';
 $all_migration_files = array_filter(scandir($migrations_dir), function($file) {

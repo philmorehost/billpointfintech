@@ -2,6 +2,8 @@
 $page_title = 'Admin Dashboard';
 require_once '../includes/admin_header.php'; // Use the new admin header
 
+// The admin_header.php already performs the auth check.
+
 // --- Data Fetching for Dashboard ---
 try {
     // Total Users
